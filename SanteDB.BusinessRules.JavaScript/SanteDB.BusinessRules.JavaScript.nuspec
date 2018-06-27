@@ -19,10 +19,12 @@
       <dependency id="Newtonsoft.Json" version="11.0.2.0"/>
     </dependencies>
     <references>
+      <reference file="SanteDB.BusinessRules.JavaScript.dll"/>
       <reference file="jint.dll"/>
     </references>
   </metadata>
   <files>
     <file src="..\Solution Items\jint.dll" target="lib\portable45-net45+win8"/>
+    <file src="..\Solution Items\jint.dll" target="lib\net45"/>
   </files>
 </package>
