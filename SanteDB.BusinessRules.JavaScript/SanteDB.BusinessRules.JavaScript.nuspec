@@ -15,8 +15,8 @@
     <copyright>Copyright 2015-2018, Mohawk College of Applied Arts and Technology</copyright>
     <tags>CDR SanteDB</tags>
     <dependencies>
-      <dependency id="SanteDB.Core.Api" version="1.1.0.0"/>
-      <dependency id="Newtonsoft.Json" version="11.0.2.0"/>
+      <dependency id="SanteDB.Core.Api" version="1.1.0"/>
+      <dependency id="Newtonsoft.Json" version="11.0.2"/>
     </dependencies>
     <references>
       <group targetFramework="portable45-net45+win8">
