@@ -108,10 +108,6 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             /// </summary>
             public Action<Object> Callback { get; set; }
             /// <summary>
-            /// SyncContextCallback
-            /// </summary>
-            public Action<Object, Object> SyncContextCallback { get; set; }
-            /// <summary>
             /// The state or parameter to the worker
             /// </summary>
             public object State { get; set; }
@@ -119,10 +115,6 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             /// The execution context
             /// </summary>
             public ExecutionContext ExecutionContext { get; set; }
-            /// <summary>
-            /// Gets or sets the synchronization context
-            /// </summary>
-            public SynchronizationContext SynchronizationContext { get; set; }
         }
 
         // Number of remaining work items
@@ -169,15 +161,6 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             this.QueueWorkItemInternal(callback, state);
         }
 
-
-        /// <summary>
-        /// Queue a user work item with the specified parameters in sync parameter mode
-        /// </summary>
-        public void QueueUserWorkItem(Action<Object, Object> callback, object state)
-        {
-            this.QueueWorkItemInternal(callback, state);
-        }
-
         /// <summary>
         /// Queues a non-pooled work item
         /// </summary>
@@ -200,19 +183,15 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// <summary>
         /// Perform queue of workitem internally
         /// </summary>
-        private void QueueWorkItemInternal(Object callback, object state, bool isPriority = false)
+        private void QueueWorkItemInternal(Action<Object> callback, object state, bool isPriority = false)
         {
             ThrowIfDisposed();
-            if (SynchronizationContext.Current == null)
-                SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
             try
             {
                 WorkItem wd = new WorkItem()
                 {
-                    Callback = callback as Action<Object>,
-                    SyncContextCallback = callback as Action<Object, Object>,
-                    SynchronizationContext = SynchronizationContext.Current,
+                    Callback = callback,
                     State = state,
                     ExecutionContext = ExecutionContext.Capture()
                 };
@@ -332,14 +311,12 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// </summary>
         private void DoWorkItem(WorkItem state)
         {
-            this.m_tracer.TraceVerbose("Starting task on {0} ---> {1}", Thread.CurrentThread.Name, ((Delegate)(state.Callback) ?? (Delegate)(state.SyncContextCallback)).Target.ToString());
+            this.m_tracer.TraceVerbose("Starting task on {0} ---> {1}", Thread.CurrentThread.Name, state.Callback.Target.ToString());
             var worker = (WorkItem)state;
             try {
 
                 if (worker.Callback != null)
                     worker.Callback(worker.State);
-                else if (worker.SyncContextCallback != null)
-                    worker.SyncContextCallback(worker.State, worker.SynchronizationContext);
             }
             catch(Exception e) {
                 this.m_tracer.TraceError("!!!!!! 0118 999 881 999 119 7253 : THREAD DEATH !!!!!!!\r\nUncaught Exception on worker thread: {0}", e);
@@ -395,25 +372,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                     }
             }
         }
-
-        /// <summary>
-        /// Execute the specified action on the synchronization context (caller thread)
-        /// </summary>
-        public void SyncExecute(object synchronizationContext, Action<object> action, object parm)
-        {
-            (synchronizationContext as SynchronizationContext).Send((s) =>
-            {
-                try
-                {
-                    action(s);
-                }
-                catch(Exception e)
-                {
-                    this.m_tracer.TraceError("!!!!!! 0118 999 881 999 119 7253 : THREAD DEATH !!!!!!!\r\nUncaught Exception on synchronized action: {0}", e);
-                }
-            }, parm);
-        }
-
+       
         #endregion
 
     }
