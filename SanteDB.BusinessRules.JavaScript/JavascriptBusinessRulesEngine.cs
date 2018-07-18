@@ -41,6 +41,7 @@ using Jint.Parser.Ast;
 using Jint.Parser;
 using SanteDB.Core.Exceptions;
 using System.Threading;
+using Jint.Runtime.Interop;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -198,9 +199,11 @@ namespace SanteDB.BusinessRules.JavaScript
                 .DebugMode(s_debugMode)
 #endif
 
-                ).SetValue("SanteDBBre", this.m_bridge)
+                )
+                .SetValue("SanteDBBre", this.m_bridge)
                 .SetValue("console", new JsConsoleProvider())
                 .SetValue("reflector", new JsObjectProvider());
+            this.m_engine.SetValue("Promise", TypeReference.CreateTypeReference(this.m_engine, typeof(JsPromiseProvider)));
 
             foreach (var itm in typeof(JavascriptBusinessRulesEngine).GetTypeInfo().Assembly.GetManifestResourceNames().Where(o => o.EndsWith(".js")))
                 using (StreamReader sr = new StreamReader(typeof(JavascriptBusinessRulesEngine).GetTypeInfo().Assembly.GetManifestResourceStream(itm)))

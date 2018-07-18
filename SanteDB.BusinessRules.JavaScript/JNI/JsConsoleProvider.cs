@@ -20,6 +20,7 @@
 using SanteDB.Core.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -65,6 +66,14 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         {
             if(!comparison)
                 throw new ArgumentOutOfRangeException(nameof(comparison), message);
+        }
+
+        /// <summary>
+        /// Output to debug log
+        /// </summary>
+        public void debug(string log)
+        {
+            Debug.WriteLine($"JS> {log}");
         }
     }
 }
