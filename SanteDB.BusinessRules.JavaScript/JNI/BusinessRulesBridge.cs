@@ -97,10 +97,23 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// <summary>
         /// Add a business rule for the specified object
         /// </summary>
-        public void AddBusinessRule(String target, String trigger, Func<Object, ExpandoObject> _delegate)
+        public void AddBusinessRule(String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate)
         {
+            NameValueCollection guardExpr = null;
+            if(guard != null)
+                foreach(var kv in guard as IDictionary<String, Object>)
+                {
+                    List<String> vals = null;
+                    if (kv.Value is object[])
+                        vals = (kv.Value as object[]).Select(o => o.ToString()).ToList();
+                    else if (kv.Value is string[])
+                        vals = (kv.Value as string[]).ToList();
+                    else
+                        vals = new List<String>() { kv.Value.ToString() };
+                    guardExpr.Add(kv.Key, vals);
+                }
             using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
-                instance.RegisterRule(target, trigger, _delegate);
+                instance.RegisterRule(target, trigger, guardExpr, _delegate);
         }
 
         /// <summary>

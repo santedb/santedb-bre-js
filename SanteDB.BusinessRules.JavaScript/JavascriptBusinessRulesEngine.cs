@@ -42,6 +42,7 @@ using Jint.Parser;
 using SanteDB.Core.Exceptions;
 using System.Threading;
 using Jint.Runtime.Interop;
+using SanteDB.Core.Model.Query;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -121,7 +122,7 @@ namespace SanteDB.BusinessRules.JavaScript
         private JNI.BusinessRulesBridge m_bridge = new JNI.BusinessRulesBridge();
 
         // Trigger definitions
-        private Dictionary<String, Dictionary<String, List<Func<object, ExpandoObject>>>> m_triggerDefinitions = new Dictionary<string, Dictionary<string, List<Func<object, ExpandoObject>>>>();
+        private Dictionary<String, Dictionary<String, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>>> m_triggerDefinitions = new Dictionary<string, Dictionary<string, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>>>();
 
         // Validators
         private Dictionary<String, List<Func<Object, Object[]>>> m_validatorDefinitions = new Dictionary<string, List<Func<object, Object[]>>>();
@@ -367,39 +368,40 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Register a rule
         /// </summary>
-        public void RegisterRule(string target, string trigger, Func<object, ExpandoObject> _delegate)
+        public void RegisterRule(string target, string trigger, NameValueCollection guard, Func<object, ExpandoObject> _delegate)
         {
-            Dictionary<String, List<Func<object, ExpandoObject>>> triggerHandler = null;
+            // Find the target type
+            var targetType = typeof(Act).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id == target);
+            if (targetType == null)
+                throw new KeyNotFoundException(target);
+
+            Dictionary<String, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>> triggerHandler = null;
             if (!this.m_triggerDefinitions.TryGetValue(target, out triggerHandler))
             {
                 this.m_tracer.TraceInfo("Will try to create BRE service for {0}", target);
                 // We need to create a rule service base and register it!!! :)
-                // Find the target type
-                var targetType = typeof(Act).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id == target);
-                if (targetType == null)
-                    throw new KeyNotFoundException(target);
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
                 var serviceManager = ApplicationServiceContext.Current.GetService(typeof(IServiceManager)) as IServiceManager;
 
                 lock (s_syncLock)
                     if (ApplicationServiceContext.Current.GetService(ruleService) == null)
                         serviceManager.AddServiceProvider(ruleService);
-
+               
                 // Now add
                 lock (this.m_localLock)
-                    this.m_triggerDefinitions.Add(target, new Dictionary<string, List<Func<object, ExpandoObject>>>()
+                    this.m_triggerDefinitions.Add(target, new Dictionary<string, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>>()
                     {
-                        { trigger, new List<Func<object, ExpandoObject>>() { _delegate } }
+                        { trigger, new List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>() { new KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>(guard, _delegate) } }
                     });
             }
             else
             {
-                List<Func<object, ExpandoObject>> delegates = null;
+                List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>> delegates = null;
                 if (!triggerHandler.TryGetValue(trigger, out delegates))
                     lock (this.m_localLock)
-                        triggerHandler.Add(trigger, new List<Func<object, ExpandoObject>>() { _delegate });
+                        triggerHandler.Add(trigger, new List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>() { new KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>(guard, _delegate) });
                 else
-                    delegates.Add(_delegate);
+                    delegates.Add(new KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>(guard, _delegate));
             }
         }
 
@@ -409,7 +411,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <typeparam name="TBinding">The type of the t binding.</typeparam>
         /// <param name="action">The action.</param>
         /// <returns>List&lt;Func&lt;System.Object, ExpandoObject&gt;&gt;.</returns>
-        public List<Func<object, ExpandoObject>> GetCallList<TBinding>(String action)
+        public List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>> GetCallList<TBinding>(String action)
         {
             return this.GetCallList(typeof(TBinding), action);
         }
@@ -420,19 +422,19 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <param name="tbinding">The tbinding.</param>
         /// <param name="action">The action.</param>
         /// <returns>List&lt;Func&lt;System.Object, ExpandoObject&gt;&gt;.</returns>
-        public List<Func<object, ExpandoObject>> GetCallList(Type tbinding, String action)
+        public List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>> GetCallList(Type tbinding, String action)
         {
             var className = tbinding.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id;
 
             // Try to get the binding
-            Dictionary<String, List<Func<object, ExpandoObject>>> triggerHandler = null;
+            Dictionary<String, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>> triggerHandler = null;
             if (this.m_triggerDefinitions.TryGetValue(className, out triggerHandler))
             {
-                List<Func<object, ExpandoObject>> callList = null;
+                List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>> callList = null;
                 if (triggerHandler.TryGetValue(action, out callList))
                     return callList;
             }
-            return new List<Func<object, ExpandoObject>>();
+            return new List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>();
 
         }
 
@@ -478,7 +480,8 @@ namespace SanteDB.BusinessRules.JavaScript
                     {
                         foreach (var c in callList)
                         {
-                            data = c(data);
+                            if(c.Key == null || this.GuardEval(c.Key, sdata))
+                                data = c.Value(data);
                         }
                     }
 
@@ -502,6 +505,28 @@ namespace SanteDB.BusinessRules.JavaScript
                     this.m_tracer.TraceError("Error running {0} for {1} : {2}", action, this.ProduceLiteral(data), e);
                     throw new BusinessRulesExecutionException($"Error running business rule {action} for {this.ProduceLiteral(data)} - {e.Message}", e);
                 }
+        }
+
+        /// <summary>
+        /// Evaluates the guard condition for the specified object
+        /// </summary>
+        /// <param name="guard">The guard that is to be evaluated</param>
+        /// <param name="data">The data to be evaluated against</param>
+        /// <returns>The evaluation criteria</returns>
+        private bool GuardEval(NameValueCollection guard, IDictionary<String, Object> data)
+        {
+            var retVal = true;
+            foreach(var gc in guard)
+            {
+                if (gc.Key.Contains(".") || gc.Key.Contains("["))
+                    throw new InvalidOperationException("Rule guards can only be simple property paths");
+
+                bool subCond = false;
+                foreach (var v in gc.Value)
+                    subCond |= data[gc.Key].Equals(v);
+                retVal &= subCond;
+            }
+            return retVal;
         }
 
         /// <summary>
@@ -537,7 +562,9 @@ namespace SanteDB.BusinessRules.JavaScript
                         dynamic viewModel = this.m_bridge.ToViewModel(retVal);
                         foreach (var c in callList)
                         {
-                            viewModel = c(viewModel);
+                            // There is a guard so let's execute it
+                            if(c.Key == null || QueryExpressionParser.BuildLinqExpression<TBinding>(c.Key).Compile()(data))
+                                viewModel = c.Value(viewModel);
                         }
                         retVal = (TBinding)this.m_bridge.ToModel(viewModel);
                     }
