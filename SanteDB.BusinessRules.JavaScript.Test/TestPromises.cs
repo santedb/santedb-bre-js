@@ -37,7 +37,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 #if DEBUG
                 .DebugMode(true)
 #else
-                .DebugMode(s_debugMode)
+                .DebugMode(false)
 #endif
 
                 )
