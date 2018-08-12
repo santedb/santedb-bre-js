@@ -38,6 +38,11 @@ namespace SanteDB.BusinessRules.JavaScript
     public class RuleServiceBase<TBinding> : IBusinessRulesService<TBinding> where TBinding : IdentifiedData
     {
         /// <summary>
+        /// Gets or sets the next binding to run
+        /// </summary>
+        public IBusinessRulesService<TBinding> Next { get; set; }
+
+        /// <summary>
         /// Invokes the specified trigger if one is registered
         /// </summary>
         /// <param name="triggerName">The name of the trigger to run</param>
@@ -57,7 +62,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterInsert(TBinding data)
         {
-            return this.InvokeTrigger("AfterInsert", data);
+            var retVal = this.InvokeTrigger("AfterInsert", data);
+            return this.Next?.AfterInsert(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -65,7 +71,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterObsolete(TBinding data)
         {
-            return this.InvokeTrigger("AfterObsolete", data);
+            var retVal = this.InvokeTrigger("AfterObsolete", data);
+            return this.Next?.AfterObsolete(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -76,9 +83,12 @@ namespace SanteDB.BusinessRules.JavaScript
             // Invoke the business rule
             if (results.Any() && JavascriptBusinessRulesEngine.Current.HasRule<TBinding>("AfterQuery", typeof(Bundle)))
                 using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
-                    return instance.Invoke("AfterQuery", new Bundle() { Item = results.OfType<IdentifiedData>().ToList() }).Item.OfType<TBinding>();
+                {
+                    var retVal = instance.Invoke("AfterQuery", new Bundle() { Item = results.OfType<IdentifiedData>().ToList() }).Item.OfType<TBinding>();
+                    return this.Next?.AfterQuery(retVal) ?? retVal;
+                }
             else
-                return results;
+                return this.Next?.AfterQuery(results) ?? results;
 
         }
 
@@ -87,7 +97,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterRetrieve(TBinding result)
         {
-            return this.InvokeTrigger("AfterRetrieve", result);
+            var retVal = this.InvokeTrigger("AfterRetrieve", result);
+            return this.Next?.AfterRetrieve(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -95,8 +106,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterUpdate(TBinding data)
         {
-            return this.InvokeTrigger("AfterUpdate", data);
-
+            var retVal = this.InvokeTrigger("AfterUpdate", data);
+            return this.Next?.AfterUpdate(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -104,8 +115,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding BeforeInsert(TBinding data)
         {
-            return this.InvokeTrigger("BeforeInsert", data);
-
+            var retVal = this.InvokeTrigger("BeforeInsert", data);
+            return this.Next?.BeforeInsert(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -113,8 +124,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding BeforeObsolete(TBinding data)
         {
-            return this.InvokeTrigger("BeforeObsolete", data);
-
+            var retVal = this.InvokeTrigger("BeforeObsolete", data);
+            return this.Next?.BeforeObsolete(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -122,7 +133,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding BeforeUpdate(TBinding data)
         {
-            return this.InvokeTrigger("BeforeUpdate", data);
+            var retVal = this.InvokeTrigger("BeforeUpdate", data);
+            return this.Next?.BeforeUpdate(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -131,7 +143,10 @@ namespace SanteDB.BusinessRules.JavaScript
         public List<DetectedIssue> Validate(TBinding data)
         {
             using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
-                return instance.Validate(data);
+            {
+                var retVal = instance.Validate(data);
+                return retVal.Union(this.Next?.Validate(data)).ToList() ?? retVal;
+            }
         }
 
     }
