@@ -43,6 +43,7 @@ using SanteDB.Core.Exceptions;
 using System.Threading;
 using Jint.Runtime.Interop;
 using SanteDB.Core.Model.Query;
+using SanteDB.Core.Services.Impl;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -350,11 +351,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 if (targetType == null)
                     throw new KeyNotFoundException(target);
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
-                var serviceManager = ApplicationServiceContext.Current.GetService(typeof(IServiceManager)) as IServiceManager;
-
-                lock (s_syncLock)
-                    if (ApplicationServiceContext.Current.GetService(ruleService) == null)
-                        serviceManager.AddServiceProvider(ruleService);
+                ApplicationServiceContext.Current.AddBusinessRuleService(ruleService);
 
                 // Now add
                 lock (this.m_localLock)
@@ -381,12 +378,8 @@ namespace SanteDB.BusinessRules.JavaScript
                 this.m_tracer.TraceInfo("Will try to create BRE service for {0}", target);
                 // We need to create a rule service base and register it!!! :)
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
-                var serviceManager = ApplicationServiceContext.Current.GetService(typeof(IServiceManager)) as IServiceManager;
+                ApplicationServiceContext.Current.AddBusinessRuleService(ruleService);
 
-                lock (s_syncLock)
-                    if (ApplicationServiceContext.Current.GetService(ruleService) == null)
-                        serviceManager.AddServiceProvider(ruleService);
-               
                 // Now add
                 lock (this.m_localLock)
                     this.m_triggerDefinitions.Add(target, new Dictionary<string, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>>()
