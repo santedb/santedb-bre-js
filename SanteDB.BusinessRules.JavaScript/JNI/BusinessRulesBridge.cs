@@ -100,8 +100,10 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         public void AddBusinessRule(String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate)
         {
             NameValueCollection guardExpr = null;
-            if(guard != null)
-                foreach(var kv in guard as IDictionary<String, Object>)
+            if (guard != null)
+            {
+                guardExpr = new NameValueCollection();
+                foreach (var kv in guard as IDictionary<String, Object>)
                 {
                     List<String> vals = null;
                     if (kv.Value is object[])
@@ -112,6 +114,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                         vals = new List<String>() { kv.Value.ToString() };
                     guardExpr.Add(kv.Key, vals);
                 }
+            }
             using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
                 instance.RegisterRule(target, trigger, guardExpr, _delegate);
         }
