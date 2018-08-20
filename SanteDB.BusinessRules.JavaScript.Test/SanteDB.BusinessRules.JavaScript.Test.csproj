@@ -113,7 +113,6 @@
     <EmbeddedResource Include="RefData\weight-ranges-female.json" />
     <EmbeddedResource Include="RefData\weight-ranges-male.json" />
     <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="TestRules\act.observation.weight.js" />
