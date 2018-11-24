@@ -341,7 +341,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public object GetService(String serviceName)
         {
-            var serviceType = typeof(IActRepositoryService).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.Name == serviceName && o.GetTypeInfo().IsInterface);
+            var serviceType = typeof(IRepositoryService<>).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.Name == serviceName && o.GetTypeInfo().IsInterface);
             if (serviceType == null)
                 return null;
             else
