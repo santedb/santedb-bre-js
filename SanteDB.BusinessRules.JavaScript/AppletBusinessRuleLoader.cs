@@ -21,12 +21,9 @@ using SanteDB.Core;
 using SanteDB.Core.Applets.Services;
 using SanteDB.Core.Diagnostics;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -57,7 +54,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     }
 
                 // Load helper assembly to speed up serialization
-                if(serializerAssembly != null)
+                if (serializerAssembly != null)
                     SanteDB.BusinessRules.JavaScript.JavascriptBusinessRulesEngine.Current.Bridge.Serializer.LoadSerializerAssembly(serializerAssembly);
 
                 //// Instruct the rules engine to load rules

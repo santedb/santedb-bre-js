@@ -17,14 +17,19 @@
  * User: justin
  * Date: 2018-6-21
  */
-using Jint.Native;
+using Jint;
 using Jint.Runtime;
+using Jint.Runtime.Interop;
 using Newtonsoft.Json;
 using SanteDB.BusinessRules.JavaScript.JNI;
 using SanteDB.Core;
 using SanteDB.Core.Diagnostics;
+using SanteDB.Core.Exceptions;
+using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
+using SanteDB.Core.Model.Query;
 using SanteDB.Core.Services;
+using SanteDB.Core.Services.Impl;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -32,18 +37,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using Jint;
-using SanteDB.Core.Model;
 using System.Text.RegularExpressions;
-using SanteDB.Core.Interfaces;
-using Jint.Parser.Ast;
-using Jint.Parser;
-using SanteDB.Core.Exceptions;
 using System.Threading;
-using Jint.Runtime.Interop;
-using SanteDB.Core.Model.Query;
-using SanteDB.Core.Services.Impl;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -149,7 +144,7 @@ namespace SanteDB.BusinessRules.JavaScript
             // Ensure the current exists
             JavascriptBusinessRulesEngine.Current.Initialize();
 
-            
+
             // Host is server, then initialize a pool
             if (ApplicationServiceContext.HostType == SanteDBHostType.Server)
             {
@@ -254,7 +249,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     finally
                     {
                         // Release lock
-                        if(Monitor.IsEntered(s_syncLock))
+                        if (Monitor.IsEntered(s_syncLock))
                             Monitor.Exit(s_syncLock);
                     }
                 }
@@ -321,7 +316,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         }
                         catch (Exception e)
                         {
-                            this.m_tracer.TraceWarning("Will skip {0} due to {1}", include, e.Message);
+                            this.m_tracer.TraceWarning("Ich bin der roboter: Will skip {0} due to {1}", include, e.Message);
                         }
 
                 }
@@ -330,7 +325,7 @@ namespace SanteDB.BusinessRules.JavaScript
             }
             catch (JavaScriptException ex)
             {
-                this.m_tracer.TraceError("Error executing JavaScript {0}:{1} > {2}", ex.LineNumber, ex.Column, ex);
+                this.m_tracer.TraceError("Ich bin der roboter: Error executing JavaScript {0}:{1} > {2}", ex.LineNumber, ex.Column, ex);
                 throw ex;
             }
         }
@@ -473,7 +468,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     {
                         foreach (var c in callList)
                         {
-                            if(c.Key == null || this.GuardEval(c.Key, sdata))
+                            if (c.Key == null || this.GuardEval(c.Key, sdata))
                                 data = c.Value(data);
                         }
                     }
@@ -509,7 +504,7 @@ namespace SanteDB.BusinessRules.JavaScript
         private bool GuardEval(NameValueCollection guard, IDictionary<String, Object> data)
         {
             var retVal = true;
-            foreach(var gc in guard)
+            foreach (var gc in guard)
             {
                 if (gc.Key.Contains(".") || gc.Key.Contains("["))
                     throw new InvalidOperationException("Rule guards can only be simple property paths");
@@ -556,7 +551,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         foreach (var c in callList)
                         {
                             // There is a guard so let's execute it
-                            if(c.Key == null || QueryExpressionParser.BuildLinqExpression<TBinding>(c.Key).Compile()(data))
+                            if (c.Key == null || QueryExpressionParser.BuildLinqExpression<TBinding>(c.Key).Compile()(data))
                                 viewModel = c.Value(viewModel);
                         }
                         retVal = (TBinding)this.m_bridge.ToModel(viewModel);
@@ -628,7 +623,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             if (this != JavascriptBusinessRulesEngine.Current) // push the thread instance back on the queue
             {
-                if(m_instanceCount <= 1 && !s_brePool.ToArray().Any(o=>o.m_engineId == this.m_engineId))
+                if (m_instanceCount <= 1 && !s_brePool.ToArray().Any(o => o.m_engineId == this.m_engineId))
                     lock (s_syncLock)
                     {
                         s_brePool.Push(this);

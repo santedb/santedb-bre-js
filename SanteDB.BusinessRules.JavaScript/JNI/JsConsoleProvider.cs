@@ -19,18 +19,14 @@
  */
 using SanteDB.Core.Diagnostics;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SanteDB.BusinessRules.JavaScript.JNI
 {
     /// <summary>
     /// Supplies console
     /// </summary>
-    public class JsConsoleProvider 
+    public class JsConsoleProvider
     {
         // Tracker
         private Tracer m_tracer = Tracer.GetTracer(typeof(JsConsoleProvider));
@@ -64,7 +60,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public void assert(bool comparison, string message)
         {
-            if(!comparison)
+            if (!comparison)
                 throw new ArgumentOutOfRangeException(nameof(comparison), message);
         }
 

@@ -21,13 +21,8 @@ using SanteDB.Core;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Services;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Dynamic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace SanteDB.BusinessRules.JavaScript.JNI
 {

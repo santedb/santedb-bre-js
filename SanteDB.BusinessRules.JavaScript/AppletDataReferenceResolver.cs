@@ -19,12 +19,8 @@
  */
 using SanteDB.Core;
 using SanteDB.Core.Applets.Services;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
