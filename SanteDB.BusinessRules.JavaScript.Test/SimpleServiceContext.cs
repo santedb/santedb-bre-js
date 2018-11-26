@@ -17,6 +17,7 @@
  * User: justin
  * Date: 2018-6-21
  */
+using SanteDB.Core;
 using SanteDB.Core.Interfaces;
 using SanteDB.Core.Services;
 using System;
@@ -30,7 +31,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// <summary>
     /// Represents a simple service provider
     /// </summary>
-    public class SimpleServiceContext : IServiceProvider, IServiceManager
+    public class SimpleServiceContext : IServiceProvider, IServiceManager, IApplicationServiceContext
     {
 
         /// <summary>
@@ -45,6 +46,13 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         {
             this.m_services.Add(this);
         }
+
+        public bool IsRunning => true;
+
+        public event EventHandler Starting;
+        public event EventHandler Started;
+        public event EventHandler Stopping;
+        public event EventHandler Stopped;
 
         /// <summary>
         /// Add a service provider class
