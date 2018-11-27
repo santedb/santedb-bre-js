@@ -33,6 +33,12 @@ namespace SanteDB.BusinessRules.JavaScript
     /// </summary>
     public class RuleServiceBase<TBinding> : IBusinessRulesService<TBinding> where TBinding : IdentifiedData
     {
+
+        /// <summary>
+        /// Gets the service name
+        /// </summary>
+        public string ServiceName => $"Business rules service for {typeof(TBinding).FullName}";
+
         /// <summary>
         /// Gets or sets the next binding to run
         /// </summary>
