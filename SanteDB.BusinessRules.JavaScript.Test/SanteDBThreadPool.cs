@@ -34,6 +34,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// </summary>
     public class SanteDBThreadPool : IThreadPoolService, IDisposable
     {
+        public string ServiceName => "Fake News";
         // Tracer
         private Tracer m_tracer = Tracer.GetTracer(typeof(SanteDBThreadPool));
         // Number of threads to keep alive
