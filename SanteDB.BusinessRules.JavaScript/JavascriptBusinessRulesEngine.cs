@@ -23,6 +23,7 @@ using Jint.Runtime.Interop;
 using Newtonsoft.Json;
 using SanteDB.BusinessRules.JavaScript.JNI;
 using SanteDB.Core;
+using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Exceptions;
 using SanteDB.Core.Model;
@@ -584,7 +585,8 @@ namespace SanteDB.BusinessRules.JavaScript
                         retVal.AddRange(issues.Cast<IDictionary<String, Object>>().Select(o => new DetectedIssue()
                         {
                             Text = o.ContainsKey("text") ? o["text"]?.ToString() : null,
-                            Priority = o.ContainsKey("priority") ? (DetectedIssuePriorityType)(int)(double)o["priority"] : DetectedIssuePriorityType.Informational
+                            Priority = o.ContainsKey("priority") ? (DetectedIssuePriorityType)(int)(double)o["priority"] : DetectedIssuePriorityType.Informational,
+                            TypeKey = o.ContainsKey("type") ? Guid.Parse(o["type"].ToString()) : DetectedIssueKeys.BusinessRuleViolationIssue
                         }));
                     }
                     return retVal;
