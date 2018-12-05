@@ -148,7 +148,7 @@ namespace SanteDB.BusinessRules.JavaScript
             using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
             {
                 var retVal = instance.Validate(data);
-                return retVal.Union(this.Next?.Validate(data)).ToList() ?? retVal;
+                return retVal.Union(this.Next?.Validate(data) ?? new List<DetectedIssue>()).ToList() ?? retVal;
             }
         }
 
