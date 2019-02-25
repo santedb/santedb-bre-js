@@ -142,7 +142,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         {
             get
             {
-                return ApplicationServiceContext.HostType != SanteDBHostType.Server;
+                return ApplicationServiceContext.Current.HostType != SanteDBHostType.Server;
             }
         }
 

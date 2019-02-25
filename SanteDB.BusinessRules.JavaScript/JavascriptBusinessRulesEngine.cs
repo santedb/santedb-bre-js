@@ -147,7 +147,7 @@ namespace SanteDB.BusinessRules.JavaScript
 
 
             // Host is server, then initialize a pool
-            if (ApplicationServiceContext.HostType == SanteDBHostType.Server)
+            if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
             {
                 s_brePool = new Stack<JavascriptBusinessRulesEngine>(Environment.ProcessorCount * 2);
                 for (int i = 0; i < Environment.ProcessorCount * 2; i++)
@@ -214,7 +214,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public static JavascriptBusinessRulesEngine GetThreadInstance()
         {
-            if (ApplicationServiceContext.HostType == SanteDBHostType.Server)
+            if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
             {
                 if (s_threadInstance == null)
                 {
