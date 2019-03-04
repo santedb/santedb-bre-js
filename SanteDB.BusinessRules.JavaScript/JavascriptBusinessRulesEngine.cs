@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using SanteDB.BusinessRules.JavaScript.JNI;
 using SanteDB.Core;
 using SanteDB.Core.BusinessRules;
+using SanteDB.Core.Configuration;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Exceptions;
 using SanteDB.Core.Model;
@@ -149,8 +150,9 @@ namespace SanteDB.BusinessRules.JavaScript
             // Host is server, then initialize a pool
             if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
             {
-                s_brePool = new Stack<JavascriptBusinessRulesEngine>(Environment.ProcessorCount * 2);
-                for (int i = 0; i < Environment.ProcessorCount * 2; i++)
+                var poolSize = ApplicationServiceContext.Current.GetService<IConfigurationManager>()?.GetSection<ApplicationServiceContextConfigurationSection>().ThreadPoolSize ?? Environment.ProcessorCount;
+                s_brePool = new Stack<JavascriptBusinessRulesEngine>(poolSize);
+                for (int i = 0; i < poolSize; i++)
                 {
                     var bre = new JavascriptBusinessRulesEngine();
                     bre.Initialize();
