@@ -49,6 +49,10 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         public bool IsRunning => true;
 
+        public OperatingSystemID OperatingSystem => OperatingSystemID.Win32;
+
+        public SanteDBHostType HostType => SanteDBHostType.Server;
+
         public event EventHandler Starting;
         public event EventHandler Started;
         public event EventHandler Stopping;
@@ -60,6 +64,14 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         public void AddServiceProvider(Type serviceType)
         {
             this.m_services.Add(Activator.CreateInstance(serviceType));
+        }
+
+        /// <summary>
+        /// Get all types
+        /// </summary>
+        public IEnumerable<Type> GetAllTypes()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(a => a.ExportedTypes);
         }
 
         /// <summary>
