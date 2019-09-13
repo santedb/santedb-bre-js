@@ -65,7 +65,7 @@
       <HintPath>..\Solution Items\jint.dll</HintPath>
     </Reference>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="SharpCompress" Version="0.18.2" />
+    <PackageReference Include="SharpCompress" Version="0.24.0" />
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
