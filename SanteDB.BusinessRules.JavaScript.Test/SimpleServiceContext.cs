@@ -53,6 +53,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         public SanteDBHostType HostType => SanteDBHostType.Server;
 
+        /// <summary>
+        /// Gets the start time
+        /// </summary>
+        public DateTime StartTime { get; private set; }
+
         public event EventHandler Starting;
         public event EventHandler Started;
         public event EventHandler Stopping;
