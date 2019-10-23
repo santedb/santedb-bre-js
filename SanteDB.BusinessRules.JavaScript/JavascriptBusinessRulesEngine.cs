@@ -587,7 +587,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         retVal.AddRange(issues.Cast<IDictionary<String, Object>>().Select(o => new DetectedIssue()
                         {
                             Text = o.ContainsKey("text") ? o["text"]?.ToString() : null,
-                            Priority = o.ContainsKey("priority") ? (DetectedIssuePriorityType)(int)(double)o["priority"] : DetectedIssuePriorityType.Informational,
+                            Priority = o.ContainsKey("priority") ? (DetectedIssuePriorityType)(int)(double)o["priority"] : DetectedIssuePriorityType.Information,
                             TypeKey = o.ContainsKey("type") ? Guid.Parse(o["type"].ToString()) : DetectedIssueKeys.BusinessRuleViolationIssue
                         }));
                     }
