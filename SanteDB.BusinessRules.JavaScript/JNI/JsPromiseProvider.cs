@@ -52,7 +52,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         private Object m_asyncResult = null;
         private Object m_asyncReject = null;
         private bool m_completed = false;
-        private ManualResetEvent m_completeEvent = new ManualResetEvent(false);
+        private ManualResetEventSlim m_completeEvent = new ManualResetEventSlim(false);
 
         /// <summary>
         /// Public constructor for promise
@@ -116,7 +116,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             var unfinished = promises.ToList();
             unfinished.RemoveAll(p => p.m_completed);
             foreach (var t in unfinished)
-                t.m_completeEvent.WaitOne();
+                t.m_completeEvent.Wait();
         }
     }
 }
