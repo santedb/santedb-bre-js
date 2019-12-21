@@ -14,8 +14,8 @@
  * License for the specific language governing permissions and limitations under 
  * the License.
  * 
- * User: justi
- * Date: 2019-1-12
+ * User: Justin Fyfe
+ * Date: 2019-8-8
  */
 
 // SanteDB.Core.Model.NonVersionedEntityData, SanteDB.Core.Model, Version=1.1.0.35405, Culture=neutral, PublicKeyToken=null
