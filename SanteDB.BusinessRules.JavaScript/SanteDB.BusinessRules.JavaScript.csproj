@@ -91,6 +91,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="lib\santedb-model.js" />
+    <EmbeddedResource Include="lib\utils.js" />
+    <EmbeddedResource Include="lib\santedb.js" />
     <Content Include="Schema\AppletAssets.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

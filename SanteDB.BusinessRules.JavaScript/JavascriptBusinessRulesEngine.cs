@@ -145,8 +145,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             // Ensure the current exists
             JavascriptBusinessRulesEngine.Current.Initialize();
-
-
+            
             // Host is server, then initialize a pool
             if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
             {
@@ -269,6 +268,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public String ExecutingFile { get; set; }
 
+       
         /// <summary>
         /// Current BRE
         /// </summary>
@@ -618,6 +618,15 @@ namespace SanteDB.BusinessRules.JavaScript
                         }
                     };
                 }
+        }
+
+        /// <summary>
+        /// Destroys this engine instance and removes it from the current 
+        /// </summary>
+        public void Destroy()
+        {
+            this.Dispose();
+            s_instance = null;
         }
 
         /// <summary>
