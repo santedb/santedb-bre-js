@@ -125,6 +125,9 @@ namespace SanteDB.BusinessRules.JavaScript
         // Validators
         private Dictionary<String, List<Func<Object, Object[]>>> m_validatorDefinitions = new Dictionary<string, List<Func<object, Object[]>>>();
 
+        // Rules which have been run
+        private List<String> m_installedRules = new List<string>();
+
         /// <summary>
         /// Only one BRE can be created
         /// </summary>
@@ -299,32 +302,37 @@ namespace SanteDB.BusinessRules.JavaScript
             try
             {
                 // Already ran
-                this.m_tracer.TraceVerbose("Adding rules to BRE: {0}", ruleId);
-                var rawScript = script.ReadToEnd();
-                // Find all reference paths
-                Regex includeReg = new Regex(@"\/\/\/\s*?\<reference\s*?path\=[""'](.*?)[""']\s?\/\>", RegexOptions.Multiline);
-                var incMatches = includeReg.Matches(rawScript);
-
-                foreach (Match match in incMatches)
+                if (!this.m_installedRules.Contains(ruleId))
                 {
-                    var include = match.Groups[1].Value;
-                    var incStream = (ApplicationServiceContext.Current.GetService(typeof(IDataReferenceResolver)) as IDataReferenceResolver)?.Resolve(include);
-                    if (incStream == null)
-                        this.m_tracer.TraceWarning("Include {0} not found", include);
-                    else
-                        try
-                        {
-                            using (StreamReader sr = new StreamReader(incStream))
-                                this.m_engine.Execute(sr.ReadToEnd());
-                        }
-                        catch (Exception e)
-                        {
-                            this.m_tracer.TraceWarning("Ich bin der roboter: Will skip {0} due to {1}", include, e.Message);
-                        }
+                    this.m_tracer.TraceVerbose("Adding rules to BRE: {0}", ruleId);
+                    var rawScript = script.ReadToEnd();
+                    // Find all reference paths
+                    Regex includeReg = new Regex(@"\/\/\/\s*?\<reference\s*?path\=[""'](.*?)[""']\s?\/\>", RegexOptions.Multiline);
+                    var incMatches = includeReg.Matches(rawScript);
 
+                    foreach (Match match in incMatches)
+                    {
+                        var include = match.Groups[1].Value;
+                        var incStream = (ApplicationServiceContext.Current.GetService(typeof(IDataReferenceResolver)) as IDataReferenceResolver)?.Resolve(include);
+                        if (incStream == null)
+                            this.m_tracer.TraceWarning("Include {0} not found", include);
+                        else
+                            try
+                            {
+                                using (StreamReader sr = new StreamReader(incStream))
+                                    this.m_engine.Execute(sr.ReadToEnd());
+                            }
+                            catch (Exception e)
+                            {
+                                this.m_tracer.TraceWarning("Ich bin der roboter: Will skip {0} due to {1}", include, e.Message);
+                            }
+
+                    }
+
+                    this.m_engine.Execute(rawScript);
                 }
-
-                this.m_engine.Execute(rawScript);
+                else
+                    this.m_tracer.TraceInfo("Rule {0} has already been run", ruleId);
             }
             catch (JavaScriptException ex)
             {
