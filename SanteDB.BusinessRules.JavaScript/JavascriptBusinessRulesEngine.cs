@@ -349,7 +349,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 if (targetType == null)
                     throw new KeyNotFoundException(target);
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
-                ApplicationServiceContext.Current.AddBusinessRuleService(ruleService);
+                ApplicationServiceContext.Current.AddBusinessRule(ruleService);
 
                 // Now add
                 lock (this.m_localLock)
@@ -376,7 +376,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 this.m_tracer.TraceInfo("Will try to create BRE service for {0}", target);
                 // We need to create a rule service base and register it!!! :)
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
-                ApplicationServiceContext.Current.AddBusinessRuleService(ruleService);
+                ApplicationServiceContext.Current.AddBusinessRule(ruleService);
 
                 // Now add
                 lock (this.m_localLock)
