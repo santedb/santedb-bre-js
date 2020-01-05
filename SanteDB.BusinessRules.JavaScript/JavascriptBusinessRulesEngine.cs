@@ -522,7 +522,14 @@ namespace SanteDB.BusinessRules.JavaScript
 
                 bool subCond = false;
                 foreach (var v in gc.Value)
-                    subCond |= data[gc.Key].Equals(v);
+                {
+                    if (gc.Value.First() == "null")
+                        subCond |= !data.ContainsKey(gc.Key) || data[gc.Key] == null;
+                    else if (data.TryGetValue(gc.Key, out object value))
+                        subCond |= value.Equals(v);
+                    else
+                        subCond = false;
+                }
                 retVal &= subCond;
             }
             return retVal;

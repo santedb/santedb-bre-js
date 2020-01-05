@@ -136,6 +136,17 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         }
 
         /// <summary>
+        /// Get the host environment in which the environment is working
+        /// </summary>
+        public int Environment
+        {
+            get
+            {
+                return (int)ApplicationServiceContext.Current.HostType;
+            }
+        }
+
+        /// <summary>
         /// True if the system is operating on the SanteDB Front end
         /// </summary>
         public bool IsInFrontEnd
