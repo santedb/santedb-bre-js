@@ -30,6 +30,7 @@ using SanteDB.Core.Exceptions;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Query;
+using SanteDB.Core.Model.Serialization;
 using SanteDB.Core.Services;
 using SanteDB.Core.Services.Impl;
 using System;
@@ -329,6 +330,7 @@ namespace SanteDB.BusinessRules.JavaScript
 
                     }
 
+                    this.m_installedRules.Add(ruleId);
                     this.m_engine.Execute(rawScript);
                 }
                 else
@@ -374,7 +376,7 @@ namespace SanteDB.BusinessRules.JavaScript
         public void RegisterRule(string target, string trigger, NameValueCollection guard, Func<object, ExpandoObject> _delegate)
         {
             // Find the target type
-            var targetType = typeof(Act).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id == target);
+            var targetType = new ModelSerializationBinder().BindToType(typeof(Act).GetTypeInfo().Assembly.FullName, target);
             if (targetType == null)
                 throw new KeyNotFoundException(target);
 
@@ -423,7 +425,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <returns>List&lt;Func&lt;System.Object, ExpandoObject&gt;&gt;.</returns>
         public List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>> GetCallList(Type tbinding, String action)
         {
-            var className = tbinding.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id;
+            new SanteDB.Core.Model.Serialization.ModelSerializationBinder().BindToName(tbinding, out string asmName, out string className);
+
 
             // Try to get the binding
             Dictionary<String, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>> triggerHandler = null;
@@ -560,7 +563,9 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     if (data == default(TBinding)) return data;
 
-                    var callList = this.GetCallList(data.GetType(), action).Union(this.GetCallList<TBinding>(action)).Distinct();
+                    var callList = this.GetCallList(data.GetType(), action);
+                    callList = callList.Union(this.GetCallList<TBinding>(action)).ToList();
+                    callList = callList.Distinct().ToList();
                     var retVal = data;
 
                     if (callList.Count() > 0)
