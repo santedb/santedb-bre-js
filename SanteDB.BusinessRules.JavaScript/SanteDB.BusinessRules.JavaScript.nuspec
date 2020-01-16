@@ -27,5 +27,6 @@
   </metadata>
   <files>
     <file src="..\Solution Items\jint.dll" target="lib\portable45-net45+win8"/>
+    <file src="..\Solution Items\esprima.dll" target="lib\portable45-net45+win8"/>
   </files>
 </package>
