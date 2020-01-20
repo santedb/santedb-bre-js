@@ -85,7 +85,7 @@ for(var i = 0; i < 1000; i++)
     console.debug('I AM HERE!' + i);");
            Thread.Sleep(4000); // Give the async process 4 sec to finish
            var result = s_engine.GetValue("foo");
-           Assert.AreEqual("hi!", result.AsString());
+           Assert.AreEqual("hi!", result.ToString());
         }
 
         /// <summary>
