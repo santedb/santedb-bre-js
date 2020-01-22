@@ -25,6 +25,7 @@ using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Collection;
 using SanteDB.Core.Model.Interfaces;
+using SanteDB.Core.Model.Json.Formatter;
 using SanteDB.Core.Model.Query;
 using SanteDB.Core.Services;
 using System;
@@ -69,6 +70,8 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
 
                 if (jatt?.Id != null && !this.m_modelMap.ContainsKey(jatt.Id))
                     this.m_modelMap.Add(jatt.Id, t);
+
+                this.m_modelSerializer.LoadSerializerAssembly(typeof(EntityViewModelSerializer).GetTypeInfo().Assembly);
             }
         }
 

@@ -387,7 +387,10 @@ namespace SanteDB.BusinessRules.JavaScript
                 this.m_tracer.TraceInfo("Will try to create BRE service for {0}", target);
                 // We need to create a rule service base and register it!!! :)
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
-                ApplicationServiceContext.Current.AddBusinessRule(ruleService);
+
+                // Only add to global handlers
+                if(this == JavascriptBusinessRulesEngine.Current)
+                    ApplicationServiceContext.Current.AddBusinessRule(ruleService);
 
                 // Now add
                 lock (this.m_localLock)

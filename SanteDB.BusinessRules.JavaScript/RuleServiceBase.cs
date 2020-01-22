@@ -43,7 +43,10 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Gets or sets the next binding to run
         /// </summary>
-        public IBusinessRulesService<TBinding> Next { get; set; }
+        public IBusinessRulesService<TBinding> Next { 
+            get; 
+            set; 
+        }
 
         /// <summary>
         /// Invokes the specified trigger if one is registered
