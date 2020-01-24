@@ -19,6 +19,7 @@
  */
 using SanteDB.Core;
 using SanteDB.Core.Diagnostics;
+using SanteDB.Core.Security;
 using SanteDB.Core.Services;
 using System;
 using System.Linq;
@@ -53,6 +54,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         private Object m_asyncReject = null;
         private bool m_completed = false;
         private ManualResetEventSlim m_completeEvent = new ManualResetEventSlim(false);
+        private ManualResetEventSlim m_thenSetEvent = new ManualResetEventSlim(false);
 
         /// <summary>
         /// Public constructor for promise
@@ -63,24 +65,37 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             this.m_tracer.TraceVerbose("Creating async promise on thread pool");
             var threadPool = (IThreadPoolService)ApplicationServiceContext.Current.GetService(typeof(IThreadPoolService));
 
+            if (s_syncObject == null)
+                s_syncObject = new object();
             var tsync = s_syncObject;
 
             threadPool.QueueUserWorkItem(
                 (o) =>
                 {
-                    var worker = o as Action<JsPromiseCallback, JsPromiseCallback>;
-                    lock (tsync)
+                    try
                     {
-                        worker((f) =>
+                        AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
+                        var worker = o as Action<JsPromiseCallback, JsPromiseCallback>;
+                        lock (tsync)
                         {
-                            this.m_thenCallback(f);
-                        }, (r) =>
-                        {
-                            this.m_catchCallback(r);
-                        });
+                            worker((f) =>
+                            {
+                                this.m_asyncResult = f;
+                                this.m_thenCallback(f);
+                            }, (r) =>
+                            {
+                                this.m_asyncReject = r;
+                                this.m_catchCallback(r);
+                            });
+                        }
+                        this.m_completed = true;
+                        this.m_completeEvent.Set();
                     }
-                    this.m_completed = true;
-                    this.m_completeEvent.Set();
+                    catch(Exception e)
+                    {
+                        this.m_tracer.TraceError("Error in Promise: {0}", e);
+
+                    }
                 }, asyncFunc);
         }
 

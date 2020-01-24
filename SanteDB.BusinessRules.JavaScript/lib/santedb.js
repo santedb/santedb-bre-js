@@ -119,8 +119,12 @@ if (!SanteDBWrapper)
             this.getAsync = function (id, viewModel, state) {
 
                 return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
+                    try {
+                        fulfill(SanteDBBre.get(__config.resource, id));
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
                 });
             };
 
@@ -135,25 +139,15 @@ if (!SanteDBWrapper)
             this.findAsync = function (query, state) {
 
                 return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
+                    try {
+                        fulfill(SanteDBBre.find(_config.resource, query));
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
                 });
 
             };
-
-            /**
-             * @method
-             * @memberof SanteDBWrapper.ResourceWrapper
-             * @param {any} query The query for the object that you are looking for
-             * @summary Queries for instances of the resource this wrapper wraps in a synchronous fashion
-             * @see {SanteDBWrapper.findAsync} For asynchronous method
-             * @return {Promise} A promise which is blocked and not executed until the operation is complete
-             */
-            this.find = function (query) {
-
-                // TODO: Use the C# bindings
-                fullfill();
-            }
 
             /**
                 * @method
@@ -174,30 +168,14 @@ if (!SanteDBWrapper)
                     delete (data.creationTime);
 
                 return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
+                    try {
+                        fulfill(SanteDBBre.insert(data));
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
                 });
             };
-
-            /**
-             * @method
-             * @memberof SantedBWrapper.ResourceWrapper
-             * @summary Sends a patch to the service
-             * @param {string} id The identifier of the object to patch
-             * @param {string} etag The e-tag to assert
-             * @param {Patch} patch The patch to be applied
-             * @param {any} state A unique state object which is passed back to the caller
-             * @returns {Promise} The promise for the operation
-             */
-            this.patchAsync = function (id, etag, patch, state) {
-                if (patch.$type !== "Patch")
-                    throw new Exception("ArgumentException", "error.invalidType", "Invalid type, resource wrapper expects Patch however " + data.$type + " specified");
-
-                return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
-                });
-            }
 
             /**
                 * @method
@@ -221,8 +199,12 @@ if (!SanteDBWrapper)
                     delete (data.updatedTime);
 
                 return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
+                    try {
+                        fulfill(SanteDBBre.save(data));
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
                 });
             };
 
@@ -237,42 +219,14 @@ if (!SanteDBWrapper)
             this.deleteAsync = function (id, state) {
 
                 return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
+                    try {
+                        fulfill(SanteDBBre.obsolete(__config.resource, id));
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
                 });
 
-            };
-
-            /**
-            * @method
-            * @memberof SanteDBWrapper.ResourceWrapper
-            * @summary Performs the specified LOCK operation on the server
-            * @param {string} id The unique identifier for the object on which the invokation is to be called
-            * @param {any} state A unique state object which is passed back to the caller
-            * @returns {Promise} The promise for the operation
-            */
-            this.lockAsync = function (id, state) {
-
-                return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
-                });
-            };
-
-            /**
-            * @method
-            * @memberof SanteDBWrapper.ResourceWrapper
-            * @summary Performs the specified UNLOCK operation on the server
-            * @param {string} id The unique identifier for the object on which the invokation is to be called
-            * @param {any} state A unique state object which is passed back to the caller
-            * @returns {Promise} The promise for the operation
-            */
-            this.unLockAsync = function (id, state) {
-
-                return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
-                });
             };
 
             /**
@@ -287,8 +241,14 @@ if (!SanteDBWrapper)
             this.nullifyAsync = function (id, state) {
 
                 return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
+                    try {
+                        var data = SanteDBBre.get(__config.resource, id);
+                        data.statusConcept = StatusKeys.Nullified;
+                        fulfill(SanteDBBre.save(data));
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
                 });
             };
 
@@ -303,79 +263,18 @@ if (!SanteDBWrapper)
                 */
             this.cancelAsync = function (id, state) {
                 return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
+                    try {
+                        var data = SanteDBBre.get(__config.resource, id);
+                        data.statusConcept = StatusKeys.Cancelled;
+                        fulfill(SanteDBBre.save(data));
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
                 });
+
             };
 
-            /**
-             * @method
-             * @memberof SanteDBWrapper.ResourceWrapper
-             * @summary Performs a find operation on an association
-             * @description Some resources allow you to chain queries which automatically scopes the results to the container
-             * @param {string} id The identifier of the object whose children you want query 
-             * @param {string} property The property path you would like to filter on 
-             * @param {any} query The query you want to execute
-             * @returns {Promise} A promise for when the request completes
-             */
-            this.findAssociatedAsync = function (id, property, query, state) {
-
-                if (!id)
-                    throw new Exception("ArgumentNullException", "Missing scoping identifier");
-                else if (!property)
-                    throw new Exception("ArgumentNullException", "Missing scoping property");
-                return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
-                });
-            };
-
-            /**
-             * @method
-             * @memberof SanteDBWrapper.ResourceWrapper
-             * @summary Adds a new association to the specified parent object
-             * @param {string} id The identifier of the container
-             * @param {string} property The associative property you want to add the value to
-             * @param {any} data The data to be added as an associative object (note: Most resources require that this object already exist)
-             * @param {any} state A stateful object for callback correlation
-             * @returns {Promise} A promise which is fulfilled when the request is complete
-             */
-            this.addAssociatedAsync = function (id, property, data, state) {
-
-                if (!id)
-                    throw new Exception("ArgumentNullException", "Missing scoping identifier");
-                else if (!property)
-                    throw new Exception("ArgumentNullException", "Missing scoping property");
-
-                return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
-                });
-            };
-
-            /**
-             * @method 
-             * @memberof SanteDBWrapper.ResourceWrapper
-             * @summary Removes an existing associated object from the specified scoper
-             * @param {string} id The identifier of the container object
-             * @param {string} property The property path from which the object is to be removed
-             * @param {string} associatedId The identifier of the sub-object to be removed
-             * @param {any} state A state for correlating multiple requests
-             * @returns {Promise} A promise which is fulfilled when the request comletes
-             */
-            this.removeAssociatedAsync = function (id, property, associatedId, state) {
-                if (!id)
-                    throw new Exception("ArgumentNullException", "Missing scoping identifier");
-                else if (!property)
-                    throw new Exception("ArgumentNullException", "Missing scoping property");
-                else if (!associatedId)
-                    throw new Exception("ArgumentNullException", "Missing associated object id");
-
-                return new Promise(function (fulfill, reject) {
-                    // TODO: Use the C# bindings
-                    fullfill();
-                });
-            }
         };
 
         // Public exposeing
