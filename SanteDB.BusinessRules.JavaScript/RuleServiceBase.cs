@@ -155,5 +155,82 @@ namespace SanteDB.BusinessRules.JavaScript
             }
         }
 
+        /// <summary>
+        /// After insert trigger generic
+        /// </summary>
+        public object AfterInsert(object data)
+        {
+            return this.AfterInsert((TBinding)data);
+        }
+
+        /// <summary>
+        /// After obsoletion occurs
+        /// </summary>
+        public object AfterObsolete(object data)
+        {
+            return this.AfterObsolete((TBinding)data);
+
+        }
+
+        /// <summary>
+        /// After query occurs
+        /// </summary>
+        public IEnumerable<object> AfterQuery(IEnumerable<object> results)
+        {
+            return this.AfterQuery(results.OfType<TBinding>()).OfType<object>();
+
+        }
+
+        /// <summary>
+        /// After retrieve
+        /// </summary>
+        public object AfterRetrieve(object result)
+        {
+            return this.AfterRetrieve((TBinding)result);
+        }
+
+        /// <summary>
+        /// After update occurs
+        /// </summary>
+        public object AfterUpdate(object data)
+        {
+            return this.AfterUpdate((TBinding)data);
+
+        }
+
+        /// <summary>
+        /// Before insert occurs
+        /// </summary>
+        public object BeforeInsert(object data)
+        {
+            return this.BeforeInsert((TBinding)data);
+
+        }
+
+        /// <summary>
+        /// Before obsoletion occurs
+        /// </summary>
+        public object BeforeObsolete(object data)
+        {
+            return this.BeforeObsolete((TBinding)data);
+
+        }
+
+        /// <summary>
+        /// Before update occurs
+        /// </summary>
+        public object BeforeUpdate(object data)
+        {
+            return this.BeforeUpdate((TBinding)data);
+
+        }
+
+        /// <summary>
+        /// Validate the object
+        /// </summary>
+        public List<DetectedIssue> Validate(object data)
+        {
+            return this.Validate((TBinding)data);
+        }
     }
 }
