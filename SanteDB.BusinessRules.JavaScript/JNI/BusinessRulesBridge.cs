@@ -222,7 +222,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     ms.Seek(0, SeekOrigin.Begin);
 
                     // Parse
-                    Jint.Native.Json.JsonParser parser = new Jint.Native.Json.JsonParser(JavascriptBusinessRulesEngine.Current.Engine);
                     JsonSerializer jsz = new JsonSerializer() { DateFormatHandling = DateFormatHandling.IsoDateFormat, TypeNameHandling = TypeNameHandling.None };
                     using (JsonReader reader = new JsonTextReader(new StreamReader(ms)))
                     {
@@ -586,5 +585,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 throw;
             }
         }
+
     }
 }

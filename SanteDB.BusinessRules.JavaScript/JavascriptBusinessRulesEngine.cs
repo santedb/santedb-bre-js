@@ -166,6 +166,17 @@ namespace SanteDB.BusinessRules.JavaScript
         }
 
         /// <summary>
+        /// Adds an object which is exposed to the BRE layer
+        /// </summary>
+        public static void AddExposedObject(String identifier, Object jniObject)
+        {
+            s_threadInstance = JavascriptBusinessRulesEngine.Current;
+            s_threadInstance.Engine.SetValue(identifier, jniObject);
+            foreach (var i in s_brePool)
+                i.Engine.SetValue(identifier, jniObject);
+        }
+
+        /// <summary>
         /// Add rules to all global objects
         /// </summary>
         public static void AddRulesGlobal(String ruleId, StreamReader script)
