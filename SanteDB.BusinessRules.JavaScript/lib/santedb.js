@@ -116,16 +116,8 @@ if (!SanteDBWrapper)
                 * @param {any} state A unique state object which is passed back to the caller
                 * @returns {Promise} The promise for the operation
                 */
-            this.getAsync = function (id, viewModel, state) {
-
-                return new Promise(function (fulfill, reject) {
-                    try {
-                        fulfill(SanteDBBre.get(__config.resource, id));
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
+            this.get = function (id, viewModel, state) {
+                return SanteDBBre.get(__config.resource, id);
             };
 
             /**
@@ -136,16 +128,9 @@ if (!SanteDBWrapper)
                 * @param {any} state A unique state object which is passed back to the caller
                 * @returns {Promise} The promise for the operation
                 */
-            this.findAsync = function (query, state) {
+            this.find = function (query, state) {
 
-                return new Promise(function (fulfill, reject) {
-                    try {
-                        fulfill(SanteDBBre.find(_config.resource, query));
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
+                return SanteDBBre.find(_config.resource, query);
 
             };
 
@@ -157,7 +142,7 @@ if (!SanteDBWrapper)
                 * @param {any} state A unique state object which is passed back to the caller
                 * @returns {Promise} The promise for the operation
                 */
-            this.insertAsync = function (data, state) {
+            this.insert = function (data, state) {
 
                 if (data.$type !== _config.resource)
                     throw new Exception("ArgumentException", "error.invalidType", "Invalid type, resource wrapper expects " + _config.resource + " however " + data.$type + " specified");
@@ -167,14 +152,7 @@ if (!SanteDBWrapper)
                 if (data.creationTime)
                     delete (data.creationTime);
 
-                return new Promise(function (fulfill, reject) {
-                    try {
-                        fulfill(SanteDBBre.insert(data));
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
+                return SanteDBBre.insert(data);
             };
 
             /**
@@ -186,7 +164,7 @@ if (!SanteDBWrapper)
                 * @param {any} state A unique state object which is passed back to the caller
                 * @returns {Promise} The promise for the operation
                 */
-            this.updateAsync = function (id, data, state) {
+            this.update = function (id, data, state) {
 
                 if (data.$type !== _config.resource)
                     throw new Exception("ArgumentException", "error.invalidType", "Invalid type, resource wrapper expects " + _config.resource + " however " + data.$type + " specified");
@@ -198,14 +176,7 @@ if (!SanteDBWrapper)
                 if (data.updatedTime)
                     delete (data.updatedTime);
 
-                return new Promise(function (fulfill, reject) {
-                    try {
-                        fulfill(SanteDBBre.save(data));
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
+                return SanteDBBre.save(data);
             };
 
             /**
@@ -216,16 +187,9 @@ if (!SanteDBWrapper)
             * @param {any} state A unique state object which is passed back to the caller
             * @returns {Promise} The promise for the operation
             */
-            this.deleteAsync = function (id, state) {
+            this.delete = function (id, state) {
 
-                return new Promise(function (fulfill, reject) {
-                    try {
-                        fulfill(SanteDBBre.obsolete(__config.resource, id));
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
+                return SanteDBBre.obsolete(__config.resource, id);
 
             };
 
@@ -239,17 +203,9 @@ if (!SanteDBWrapper)
                 * @returns {Promise} The promise for the operation
                 */
             this.nullifyAsync = function (id, state) {
-
-                return new Promise(function (fulfill, reject) {
-                    try {
-                        var data = SanteDBBre.get(__config.resource, id);
-                        data.statusConcept = StatusKeys.Nullified;
-                        fulfill(SanteDBBre.save(data));
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
+                var data = SanteDBBre.get(__config.resource, id);
+                data.statusConcept = StatusKeys.Nullified;
+                return SanteDBBre.save(data);
             };
 
             /**
@@ -261,25 +217,17 @@ if (!SanteDBWrapper)
                 * @param {any} state A unique state object which is passed back to the caller
                 * @returns {Promise} The promise for the operation
                 */
-            this.cancelAsync = function (id, state) {
-                return new Promise(function (fulfill, reject) {
-                    try {
-                        var data = SanteDBBre.get(__config.resource, id);
-                        data.statusConcept = StatusKeys.Cancelled;
-                        fulfill(SanteDBBre.save(data));
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
-
+            this.cancel = function (id, state) {
+                var data = SanteDBBre.get(__config.resource, id);
+                data.statusConcept = StatusKeys.Cancelled;
+                return SanteDBBre.save(data);
             };
 
         };
 
         // Public exposeing
         this.ResourceWrapper = ResourceWrapper;
-        
+
         // Resources internal
         var _resources = {
             /**
@@ -534,15 +482,15 @@ if (!SanteDBWrapper)
 
         // HACK: Wrapper pointer facility = place
         _resources.facility = _resources.place;
-        
-       
+
+
         /**
             * @property
             * @memberof SanteDBWrapper
             * @summary Provides access to resource handlers
             */
         this.resources = _resources;
-       
+
     };
 
 if (!SanteDB)

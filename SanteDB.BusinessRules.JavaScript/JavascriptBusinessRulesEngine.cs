@@ -31,6 +31,7 @@ using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Query;
 using SanteDB.Core.Model.Serialization;
+using SanteDB.Core.Security;
 using SanteDB.Core.Services;
 using SanteDB.Core.Services.Impl;
 using System;
@@ -149,7 +150,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             // Ensure the current exists
             JavascriptBusinessRulesEngine.Current.Initialize();
-            
+
             // Host is server, then initialize a pool
             if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
             {
@@ -284,7 +285,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public String ExecutingFile { get; set; }
 
-       
+
         /// <summary>
         /// Current BRE
         /// </summary>
@@ -400,7 +401,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
 
                 // Only add to global handlers
-                if(this == JavascriptBusinessRulesEngine.Current)
+                if (this == JavascriptBusinessRulesEngine.Current)
                     ApplicationServiceContext.Current.AddBusinessRule(ruleService);
 
                 // Now add
@@ -574,6 +575,9 @@ namespace SanteDB.BusinessRules.JavaScript
         public TBinding Invoke<TBinding>(string action, TBinding data) where TBinding : IdentifiedData
         {
             lock (this.m_localLock)
+            {
+                var oldContext = AuthenticationContext.Current;
+                AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
                 try
                 {
                     if (data == default(TBinding)) return data;
@@ -602,6 +606,11 @@ namespace SanteDB.BusinessRules.JavaScript
                     this.m_tracer.TraceError("Error running {0} for {1} : {2}", action, data, e);
                     throw new BusinessRulesExecutionException($"Error running business rule {action} for {data}", e);
                 }
+                finally
+                {
+                    AuthenticationContext.Current = oldContext;
+                }
+            }
         }
 
         /// <summary>
@@ -610,6 +619,9 @@ namespace SanteDB.BusinessRules.JavaScript
         public List<DetectedIssue> Validate<TBinding>(TBinding data) where TBinding : IdentifiedData
         {
             lock (this.m_localLock)
+            {
+                var oldContext = AuthenticationContext.Current;
+                AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
                 try
                 {
                     var callList = this.GetValidators(data.GetType()).Union(this.GetValidators<TBinding>()).Distinct();
@@ -653,6 +665,11 @@ namespace SanteDB.BusinessRules.JavaScript
                         }
                     };
                 }
+                finally
+                {
+                    AuthenticationContext.Current = oldContext;
+                }
+            }
         }
 
         /// <summary>
