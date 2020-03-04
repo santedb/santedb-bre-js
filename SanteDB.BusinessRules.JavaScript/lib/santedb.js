@@ -1,7 +1,7 @@
 ﻿/// <reference path="./santedb-model.js"/>
 /*
- * Copyright 2015-2018 Mohawk College of Applied Arts and Technology
- * 
+ * Based on OpenIZ, Copyright (C) 2015 - 2019 Mohawk College of Applied Arts and Technology
+ * Copyright (C) 2019 - 2020, Fyfe Software Inc. and the SanteSuite Contributors (See NOTICE.md)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you 
  * may not use this file except in compliance with the License. You may 
@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations under 
  * the License.
  * 
- * User: justin
- * Date: 2018-7-23
+ * User: fyfej
+ * Date: 2019-12-24
  */
 'use strict';
 
