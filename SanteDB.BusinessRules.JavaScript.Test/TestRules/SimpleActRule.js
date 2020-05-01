@@ -17,7 +17,7 @@
  * User: Justin Fyfe
  * Date: 2019-8-8
  */
-OpenIZBre.AddBusinessRule("Act", "AfterInsert", function (act)
+SanteDBBre.AddBusinessRule("Act", "AfterInsert", {}, function (act)
 {
     var simplifiedAct = new OpenIZModel.Act(act);
 
@@ -26,7 +26,7 @@ OpenIZBre.AddBusinessRule("Act", "AfterInsert", function (act)
         !simplifiedAct.tag["hasRunAdjustment"])
         return { value: act }; // not interested
 
-    var simplePlace = OpenIZBre.Data.Get("Place", simplifiedAct.participation.Location.targetModel.id);
+    var simplePlace = SanteDBBre.Data.Get("Place", simplifiedAct.participation.Location.targetModel.id);
     var materialId = simplifiedAct.participation.Product.playerModel.id;
     var materialRelationship = new OpenIZModel.EntityRelationship(simplePlace.relationship.OwnedEntity.where(function (x) { return x.targetModel.id == materialId }));
     materialRelationship.quantity -= simplifiedAct.participation.Product.quantity;

@@ -50,6 +50,8 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         {
             ApplicationServiceContext.Current = new SimpleServiceContext();
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(TestDataReferenceResolver));
+            (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(SanteDBThreadPool));
+            (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(ConceptRepository));
 
             var names = typeof(TestSimpleRules).Assembly.GetManifestResourceNames();
 
@@ -217,10 +219,9 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
             Assert.IsInstanceOfType(patient, typeof(Patient));
             Assert.AreEqual(1, patient.Participations.Count);
-            Assert.AreEqual("Female", patient.GenderConcept.Mnemonic);
+            Assert.AreEqual("Stuff!!!", patient.GenderConcept.Mnemonic);
             Assert.AreEqual(2, patient.Names.FirstOrDefault().Component.Count);
             Assert.AreEqual("RecordTarget", patient.Participations[0].ParticipationRole.Mnemonic);
-            Assert.AreEqual("UnitOfMeasure_Kilograms", (patient.Participations[0].Act as QuantityObservation).UnitOfMeasure.Mnemonic);
             Assert.IsTrue(patient.DateOfBirth.HasValue);
         }
 

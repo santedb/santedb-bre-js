@@ -85,6 +85,9 @@ namespace SanteDB.BusinessRules.JavaScript
             s_debugMode = debugMode;
         }
 
+        // Multi-threaded 
+        private static bool s_multiThreaded = false;
+
         // UUID for logging
         private Guid m_engineId = Guid.NewGuid();
 
@@ -154,6 +157,7 @@ namespace SanteDB.BusinessRules.JavaScript
             // Host is server, then initialize a pool
             if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
             {
+                s_multiThreaded = true;
                 var poolSize = ApplicationServiceContext.Current.GetService<IConfigurationManager>()?.GetSection<ApplicationServiceContextConfigurationSection>().ThreadPoolSize ?? Environment.ProcessorCount;
                 s_brePool = new Stack<JavascriptBusinessRulesEngine>(poolSize);
                 for (int i = 0; i < poolSize; i++)
@@ -232,7 +236,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public static JavascriptBusinessRulesEngine GetThreadInstance()
         {
-            if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
+            if (s_multiThreaded)
             {
                 if (s_threadInstance == null)
                 {

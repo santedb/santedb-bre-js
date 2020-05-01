@@ -17,12 +17,12 @@
  * User: Justin Fyfe
  * Date: 2019-8-8
  */
-OpenIZBre.AddBusinessRule("Patient", "AfterInsert", function (patient) {
+SanteDBBre.AddBusinessRule("Patient", "AfterInsert", {}, function (patient) {
     // Simplify
     //var simplePatient = new OpenIZModel.Patient(patient);
     var simplePatient = patient;
     // Should get service
-    var serviceManager = OpenIZBre.GetService("IServiceManager");
+    var serviceManager = SanteDBBre.GetService("IServiceManager");
     console.assert(serviceManager != null, "Missing Service Manager");
     console.assert(serviceManager.AddServiceProvider !== undefined, "Service Manager isn't really really a service manager");
     console.assert(simplePatient != null, "Patient is null");
@@ -30,7 +30,6 @@ OpenIZBre.AddBusinessRule("Patient", "AfterInsert", function (patient) {
     console.assert(simplePatient.genderConceptModel.mnemonic == "Female", "Expected Female");
     console.assert(simplePatient.participation != null, "Participation missing");
     console.assert(simplePatient.participation.RecordTarget != null, "Record Target missing");
-    console.assert(simplePatient.participation.RecordTarget.actModel.unitOfMeasureModel != null, "Unit of measure missing");
     console.assert(simplePatient.name != null, "Names null");
     console.assert(simplePatient.name.Legal != null, "Names missing Legal");
     console.assert(simplePatient.name.Legal.component != null, "Name missing components");
@@ -38,12 +37,11 @@ OpenIZBre.AddBusinessRule("Patient", "AfterInsert", function (patient) {
     console.assert(simplePatient.name.Legal.component.Family == "Smith", "Expected Smith as family");
     simplePatient.dateOfBirth = new Date();
 
-    SanteDB.Concept.findConceptAsync({
-        query: "mnemonic=Female",
-        continueWith: function (concept) {
-            simplePatient.genderConceptModel = concept.item[0];
-        }
-    });
+    var results = SanteDB.resources.concept.find(
+        { mnemonic: "Female" }
+    );
+    simplePatient.genderConceptModel = results.resource[0];
+    
     return simplePatient;
 });
 
@@ -51,7 +49,7 @@ OpenIZBre.AddBusinessRule("Patient", "AfterInsert", function (patient) {
  * Sample Validator for Patient - 
  * Must have gender, must be present
  */
-OpenIZBre.AddValidator("Patient", function (patient) {
+SanteDBBre.AddValidator("Patient", function (patient) {
 
     var retVal = new Array();
 

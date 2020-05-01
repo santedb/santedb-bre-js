@@ -268,7 +268,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     this.m_cacheObject.Clear();
 
                     object rawItems = null;
-                    if (!bdl.TryGetValue("$item", out rawItems) && !bdl.TryGetValue("item", out rawItems))
+                    if (!bdl.TryGetValue("resource", out rawItems))
                     {
                         this.m_tracer.TraceVerbose("Bundle contains no items: {0}", this.ProduceLiteral(bdl));
                         return bundle;
@@ -291,9 +291,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                         }
                     }
 
-                    bdl.Remove("item");
-                    bdl.Remove("$item");
-                    bdl.Add("$item", itms);
+                    bdl.Add("resource", itms);
                     return bdl;
                 }
                 catch (Exception e)
@@ -322,7 +320,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     if (kv.Value is JObject)
                         expandoDic.Add(kv.Key, ConvertToJint(kv.Value as JObject));
                     else if (kv.Value is JArray)
-                        expandoDic.Add(kv.Key == "item" ? "$item" : kv.Key, (kv.Value as JArray).Select(o => o is JValue ? (o as JValue).Value : ConvertToJint(o as JObject)).ToArray());
+                        expandoDic.Add(kv.Key, (kv.Value as JArray).Select(o => o is JValue ? (o as JValue).Value : ConvertToJint(o as JObject)).ToArray());
                     else
                     {
                         object jValue = (kv.Value as JValue).Value;
@@ -394,11 +392,11 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             try
             {
                 var dictData = data as IDictionary<String, object>;
-                if (dictData?.ContainsKey("$item") == true) // HACK: JInt does not like Item property on ExpandoObject
-                {
-                    dictData.Add("item", dictData["$item"]);
-                    dictData.Remove("$item");
-                }
+                //if (dictData?.ContainsKey("$item") == true) // HACK: JInt does not like Item property on ExpandoObject
+                //{
+                //    dictData.Add("item", dictData["$item"]);
+                //    dictData.Remove("$item");
+                //}
 
                 // Serialize to a view model serializer
                 using (MemoryStream ms = new MemoryStream())

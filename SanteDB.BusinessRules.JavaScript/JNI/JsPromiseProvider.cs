@@ -69,34 +69,41 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 s_syncObject = new object();
             var tsync = s_syncObject;
 
-            threadPool.QueueUserWorkItem(
-                (o) =>
+            Action<Object> workerCallback = (o) =>
+            {
+                try
                 {
-                    try
+                    AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
+                    var worker = o as Action<JsPromiseCallback, JsPromiseCallback>;
+                    lock (tsync)
                     {
-                        AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
-                        var worker = o as Action<JsPromiseCallback, JsPromiseCallback>;
-                        lock (tsync)
+                        worker((f) =>
                         {
-                            worker((f) =>
-                            {
-                                this.m_asyncResult = f;
-                                this.m_thenCallback(f);
-                            }, (r) =>
-                            {
-                                this.m_asyncReject = r;
-                                this.m_catchCallback(r);
-                            });
-                        }
-                        this.m_completed = true;
-                        this.m_completeEvent.Set();
+                            this.m_asyncResult = f;
+                            this.m_thenCallback?.Invoke(f);
+                        }, (r) =>
+                        {
+                            this.m_asyncReject = r;
+                            this.m_catchCallback?.Invoke(r);
+                        });
                     }
-                    catch(Exception e)
-                    {
-                        this.m_tracer.TraceError("Error in Promise: {0}", e);
+                    this.m_completed = true;
+                    this.m_completeEvent.Set();
+                }
+                catch (Exception e)
+                {
+                    this.m_tracer.TraceError("Error in Promise: {0}", e);
+                    this.m_completeEvent.Set();
 
-                    }
-                }, asyncFunc);
+                }
+            };
+
+            if (threadPool != null)
+                threadPool.QueueUserWorkItem(workerCallback, asyncFunc);
+            else
+            {
+                workerCallback.BeginInvoke(asyncFunc, null, null);
+            }
         }
 
         /// <summary>
