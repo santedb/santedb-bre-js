@@ -439,10 +439,15 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 var mi = idp.GetRuntimeMethod("Obsolete", new Type[] { typeof(Guid) });
                 return this.ToViewModel(mi.Invoke(idpInstance, new object[] { id }) as IdentifiedData);
             }
+            catch (TargetInvocationException e)
+            {
+                this.m_tracer.TraceError("Persistence obsoleting BRE object: {0}/{1} - {2}", type, id, e.InnerException);
+                throw new Exception($"Persistence error obsoleting BRE object: {type}/{id}", e.InnerException);
+            }
             catch (Exception e)
             {
-                this.m_tracer.TraceError("Error obsoleting object : {0}", e);
-                throw;
+                this.m_tracer.TraceError("Error obsoleting BRE object: {0}/{1} - {2}", type, id, e);
+                throw new Exception($"Error obsoleting BRE object: {type}/{id}", e);
             }
         }
 
@@ -477,10 +482,15 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 }
                 return retVal;
             }
+            catch (TargetInvocationException e)
+            {
+                this.m_tracer.TraceError("Persistence getting BRE object: {0}/{1} - {2}", type, id, e.InnerException);
+                throw new Exception($"Persistence error getting BRE object: {type}/{id}", e.InnerException);
+            }
             catch (Exception e)
             {
-                this.m_tracer.TraceError("Error getting object: {0}", e);
-                throw;
+                this.m_tracer.TraceError("Error getting BRE object: {0}/{1} - {2}", type, id, e);
+                throw new Exception($"Error getting BRE object: {type}/{id}", e);
             }
         }
 
@@ -522,10 +532,15 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     TotalResults = results.Count()
                 });
             }
+            catch (TargetInvocationException e)
+            {
+                this.m_tracer.TraceError("Persistence searching from BRE: {0}?{1} - {2}", type, query, e.InnerException);
+                throw new Exception($"Persistence searching from BRE : {type}?{query}", e.InnerException);
+            }
             catch (Exception e)
             {
-                this.m_tracer.TraceError("Error executing search : {0}", e);
-                throw;
+                this.m_tracer.TraceError("Error searching from BRE: {0}?{1} - {2}", type, query, e);
+                throw new Exception($"Error searching from BRE: {type}?{query}", e);
             }
         }
 
@@ -551,10 +566,15 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 var mi = idp.GetRuntimeMethod("Save", new Type[] { data.GetType() });
                 return this.ToViewModel(mi.Invoke(idpInstance, new object[] { data }) as IdentifiedData);
             }
+            catch (TargetInvocationException e)
+            {
+                this.m_tracer.TraceError("Persistence saving in BRE: {0} - {1}", value, e.InnerException);
+                throw new Exception($"Persistence saving in  BRE : {value}", e.InnerException);
+            }
             catch (Exception e)
             {
-                this.m_tracer.TraceError("Error saving object: {0}", e);
-                throw;
+                this.m_tracer.TraceError("Error saving in  BRE: {0} - {1}", value, e);
+                throw new Exception($"Error saving in  BRE: {value}", e);
             }
         }
 
@@ -579,11 +599,17 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 var mi = idp.GetRuntimeMethod("Insert", new Type[] { data.GetType() });
                 return this.ToViewModel(mi.Invoke(idpInstance, new object[] { data }) as IdentifiedData);
             }
+            catch (TargetInvocationException e)
+            {
+                this.m_tracer.TraceError("Persistence inserting in BRE: {0} - {1}", value, e.InnerException);
+                throw new Exception($"Persistence inserting in  BRE : {value}", e.InnerException);
+            }
             catch (Exception e)
             {
-                this.m_tracer.TraceError("Error inserting BRE object: {0}", e);
-                throw;
+                this.m_tracer.TraceError("Error inserting in  BRE: {0} - {1}", value, e);
+                throw new Exception($"Error inserting in  BRE: {value}", e);
             }
+
         }
 
     }
