@@ -33,13 +33,20 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSymbols>true</IncludeSymbols>
-    <PackageLicenseFile>..\LICENSE</PackageLicenseFile>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	    <Product>SanteDB</Product>
     <Copyright>Copyright (C) 2015-2020 SanteSuite Contributors (See: NOTICES)</Copyright>
     <Company>SanteSuite Contributors</Company>
-  </PropertyGroup>  
+  </PropertyGroup>
+    
   <ItemGroup>
+    <Compile Remove="Schema\**" />
+    <EmbeddedResource Remove="Schema\**" />
+    <None Remove="Schema\**" />
+  </ItemGroup>  
+  <ItemGroup>
+    <PackageReference Include="Jint" Version="2.11.58" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>  
   
@@ -114,12 +121,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Reference Include="Esprima">
-      <HintPath>..\Solution Items\Esprima.dll</HintPath>
-    </Reference>
-    <Reference Include="jint">
-      <HintPath>..\Solution Items\jint.dll</HintPath>
-    </Reference>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="SharpCompress" Version="0.25.0" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
@@ -128,7 +129,6 @@
     <EmbeddedResource Include="lib\santedb-model.js" />
     <EmbeddedResource Include="lib\utils.js" />
     <EmbeddedResource Include="lib\santedb.js" />
-    <Content Include="Schema\AppletAssets.txt" />
   </ItemGroup>
   <!-- <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" /> -->
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
