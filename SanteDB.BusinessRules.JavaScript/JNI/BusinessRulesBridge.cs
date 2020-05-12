@@ -291,7 +291,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                         }
                     }
 
-                    bdl.Add("resource", itms);
+                    //bdl.Add("resource", itms);
                     return bdl;
                 }
                 catch (Exception e)

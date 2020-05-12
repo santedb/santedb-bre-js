@@ -605,6 +605,12 @@ namespace SanteDB.BusinessRules.JavaScript
 
                     return retVal;
                 }
+                catch(JavaScriptException e)
+                {
+                    this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
+                        action, data, e.Location.Source, e.LineNumber, e.CallStack, e);
+                    throw new BusinessRulesExecutionException($"Error running business rule {action} for {data}", e);
+                }
                 catch (Exception e)
                 {
                     this.m_tracer.TraceError("Error running {0} for {1} : {2}", action, data, e);
