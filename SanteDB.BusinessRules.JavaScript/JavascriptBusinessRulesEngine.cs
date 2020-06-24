@@ -158,7 +158,7 @@ namespace SanteDB.BusinessRules.JavaScript
             if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
             {
                 s_multiThreaded = true;
-                var poolSize = ApplicationServiceContext.Current.GetService<IConfigurationManager>()?.GetSection<ApplicationServiceContextConfigurationSection>().ThreadPoolSize ?? Environment.ProcessorCount;
+                var poolSize = Environment.ProcessorCount / 2;
                 s_brePool = new Stack<JavascriptBusinessRulesEngine>(poolSize);
                 for (int i = 0; i < poolSize; i++)
                 {
