@@ -58,9 +58,9 @@
         <PackageReference Include="SanteDB.Core.Applets" Version="2.0.25.0" />
         <PackageReference Include="SanteDB.Core.Model" Version="2.0.25.0" />
 =======
-        <PackageReference Include="SanteDB.Core.Api" Version="2.0.24.0" />
-        <PackageReference Include="SanteDB.Core.Applets" Version="2.0.24.0" />
-        <PackageReference Include="SanteDB.Core.Model" Version="2.0.24.0" />
+        <PackageReference Include="SanteDB.Core.Api" Version="2.0.25.0" />
+        <PackageReference Include="SanteDB.Core.Applets" Version="2.0.25.0" />
+        <PackageReference Include="SanteDB.Core.Model" Version="2.0.25.0" />
 >>>>>>> 319cd7386f3763f7151df55cb6712a5f40491009
       </ItemGroup>
     </Otherwise>
