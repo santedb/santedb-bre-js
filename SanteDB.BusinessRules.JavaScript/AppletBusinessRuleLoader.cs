@@ -61,10 +61,6 @@ namespace SanteDB.BusinessRules.JavaScript
                         }
                 }
 
-                // Load helper assembly to speed up serialization
-                if (serializerAssembly != null)
-                    SanteDB.BusinessRules.JavaScript.JavascriptBusinessRulesEngine.Current.Bridge.Serializer.LoadSerializerAssembly(serializerAssembly);
-
                 //// Instruct the rules engine to load rules
                 //SanteDB.BusinessRules.JavaScript.JavascriptBusinessRulesEngine.EngineCreated += (o, e) =>
                 //{

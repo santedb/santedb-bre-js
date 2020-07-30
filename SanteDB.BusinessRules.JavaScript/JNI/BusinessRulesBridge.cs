@@ -49,9 +49,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         private Tracer m_tracer = Tracer.GetTracer(typeof(BusinessRulesBridge));
 
         private Regex date_regex = new Regex(@"(\d{4})-(\d{2})-(\d{2})");
-        // View model serializer
-        private JsonViewModelSerializer m_modelSerializer = new JsonViewModelSerializer();
-
+        
         // Map of view model names to type names
         private Dictionary<String, Type> m_modelMap = new Dictionary<string, Type>();
 
@@ -71,14 +69,8 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 if (jatt?.Id != null && !this.m_modelMap.ContainsKey(jatt.Id))
                     this.m_modelMap.Add(jatt.Id, t);
 
-                this.m_modelSerializer.LoadSerializerAssembly(typeof(EntityViewModelSerializer).GetTypeInfo().Assembly);
             }
         }
-
-        /// <summary>
-        /// Gets the serializer
-        /// </summary>
-        public JsonViewModelSerializer Serializer { get { return this.m_modelSerializer; } }
 
         /// <summary>
         /// Break current execution
@@ -218,7 +210,12 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 using (MemoryStream ms = new MemoryStream())
                 {
                     using (TextWriter tw = new StreamWriter(ms, Encoding.UTF8, 2048, true))
-                        this.m_modelSerializer.Serialize(tw, data);
+                    using(var szr = new JsonViewModelSerializer())
+                    {
+                        szr.LoadSerializerAssembly(typeof(SecurityApplicationViewModelSerializer).GetTypeInfo().Assembly);
+                        szr.Serialize(tw, data);
+                    }
+
                     ms.Seek(0, SeekOrigin.Begin);
 
                     // Parse
@@ -407,8 +404,12 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
 
                     // De-serialize
                     ms.Seek(0, SeekOrigin.Begin);
-                    var retVal = this.m_modelSerializer.DeSerialize<IdentifiedData>(ms);
-                    return retVal;
+
+                    using (var szr = new JsonViewModelSerializer())
+                    {
+                        szr.LoadSerializerAssembly(typeof(SecurityApplicationViewModelSerializer).GetTypeInfo().Assembly);
+                        return szr.DeSerialize<IdentifiedData>(ms);
+                    }
                 }
             }
             catch (Exception e)
