@@ -71,6 +71,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             this.m_services.Add(Activator.CreateInstance(serviceType));
         }
 
+        public void AddServiceProvider(object serviceInstance)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Get all types
         /// </summary>
