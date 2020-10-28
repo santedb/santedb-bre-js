@@ -48,7 +48,7 @@
     <None Remove="Schema\**" />
   </ItemGroup>  
   <ItemGroup>
-    <PackageReference Include="Jint" Version="2.11.58" />
+    <PackageReference Include="Jint" Version="3.0.0-beta-1828" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>  
   

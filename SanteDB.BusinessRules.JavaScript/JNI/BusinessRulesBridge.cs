@@ -104,7 +104,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     guardExpr.Add(kv.Key, vals);
                 }
             }
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
                 instance.RegisterRule(target, trigger, guardExpr, _delegate);
         }
 
@@ -113,7 +113,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public void AddValidator(String target, Func<Object, Object[]> _delegate)
         {
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
                 instance.RegisterValidator(target, _delegate);
         }
 
@@ -122,7 +122,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public object ExecuteRule(String action, Object data)
         {
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
             {
                 var sData = this.ToModel(data);
                 var retVal = instance.Invoke(action, sData);
@@ -255,7 +255,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public Object ExecuteBundleRules(String trigger, Object bundle)
         {
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
             {
                 try
                 {
