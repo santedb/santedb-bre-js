@@ -328,8 +328,11 @@ namespace SanteDB.BusinessRules.JavaScript
 
             // Has this rule identifier been registered for that type?
             if (!this.m_installedTriggers.TryGetValue(targetType, out List<String> installedTriggers))
+            {
+                installedTriggers = new List<string>();
                 lock (this.m_localLock)
-                    this.m_installedTriggers.Add(targetType, new List<string>());
+                    this.m_installedTriggers.Add(targetType, installedTriggers);
+            }
             if (installedTriggers.Contains(id))
             {
                 this.m_tracer.TraceWarning("Rule {0} on type {1} has already been registered, skipping", id, targetType);
