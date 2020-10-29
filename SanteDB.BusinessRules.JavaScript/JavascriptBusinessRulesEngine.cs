@@ -118,6 +118,9 @@ namespace SanteDB.BusinessRules.JavaScript
         // Rules which have been run
         private List<String> m_installedRules = new List<string>();
 
+        // Installed triggers
+        private Dictionary<Type, List<String>> m_installedTriggers = new Dictionary<Type, List<string>>();
+
         /// <summary>
         /// Only one BRE can be created
         /// </summary>
@@ -276,18 +279,31 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Register a validator which is responsible for validation
         /// </summary>
-        public void RegisterValidator(string target, Func<object, Object[]> _delegate)
+        public void RegisterValidator(string id, string target, Func<object, Object[]> _delegate)
         {
+            // Find the target type
+            var targetType = typeof(Act).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id == target);
+            if (targetType == null)
+                throw new KeyNotFoundException(target);
+
+            // Has this rule identifier been registered for that type?
+            if (!this.m_installedTriggers.TryGetValue(targetType, out List<String> installedTriggers))
+                lock (this.m_localLock)
+                    this.m_installedTriggers.Add(targetType, new List<string>());
+            if (installedTriggers.Contains(id))
+            {
+                this.m_tracer.TraceWarning("Rule {0} on type {1} has already been registered, skipping", id, targetType);
+                return;
+            }
+            else
+                installedTriggers.Add(id);
 
             List<Func<object, Object[]>> validatorFunc = null;
             if (!this.m_validatorDefinitions.TryGetValue(target, out validatorFunc))
             {
                 this.m_tracer.TraceVerbose("Will try to create BRE service for {0}", target);
                 // We need to create a rule service base and register it!!! :)
-                // Find the target type
-                var targetType = typeof(Act).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id == target);
-                if (targetType == null)
-                    throw new KeyNotFoundException(target);
+               
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
                 ApplicationServiceContext.Current.AddBusinessRule(ruleService);
 
@@ -303,12 +319,24 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Register a rule
         /// </summary>
-        public void RegisterRule(string target, string trigger, NameValueCollection guard, Func<object, ExpandoObject> _delegate)
+        public void RegisterRule(string id, string target, string trigger, NameValueCollection guard, Func<object, ExpandoObject> _delegate)
         {
             // Find the target type
             var targetType = new ModelSerializationBinder().BindToType(typeof(Act).GetTypeInfo().Assembly.FullName, target);
             if (targetType == null)
                 throw new KeyNotFoundException(target);
+
+            // Has this rule identifier been registered for that type?
+            if (!this.m_installedTriggers.TryGetValue(targetType, out List<String> installedTriggers))
+                lock (this.m_localLock)
+                    this.m_installedTriggers.Add(targetType, new List<string>());
+            if (installedTriggers.Contains(id))
+            {
+                this.m_tracer.TraceWarning("Rule {0} on type {1} has already been registered, skipping", id, targetType);
+                return;
+            }
+            else
+                installedTriggers.Add(id);
 
             Dictionary<String, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>> triggerHandler = null;
             if (!this.m_triggerDefinitions.TryGetValue(target, out triggerHandler))

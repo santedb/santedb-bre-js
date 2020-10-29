@@ -86,7 +86,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// <summary>
         /// Add a business rule for the specified object
         /// </summary>
-        public void AddBusinessRule(String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate)
+        public void AddBusinessRule(String id, String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate)
         {
             NameValueCollection guardExpr = null;
             if (guard != null)
@@ -105,16 +105,16 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 }
             }
             using (var instance = JavascriptBusinessRulesEngine.GetInstance())
-                instance.RegisterRule(target, trigger, guardExpr, _delegate);
+                instance.RegisterRule(id, target, trigger, guardExpr, _delegate);
         }
 
         /// <summary>
         /// Adds validator
         /// </summary>
-        public void AddValidator(String target, Func<Object, Object[]> _delegate)
+        public void AddValidator(String id, String target, Func<Object, Object[]> _delegate)
         {
             using (var instance = JavascriptBusinessRulesEngine.GetInstance())
-                instance.RegisterValidator(target, _delegate);
+                instance.RegisterValidator(id, target, _delegate);
         }
 
         /// <summary>
