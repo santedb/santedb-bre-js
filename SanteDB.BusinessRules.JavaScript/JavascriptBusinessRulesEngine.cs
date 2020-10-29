@@ -303,7 +303,7 @@ namespace SanteDB.BusinessRules.JavaScript
             {
                 this.m_tracer.TraceVerbose("Will try to create BRE service for {0}", target);
                 // We need to create a rule service base and register it!!! :)
-               
+
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
                 ApplicationServiceContext.Current.AddBusinessRule(ruleService);
 
@@ -316,6 +316,7 @@ namespace SanteDB.BusinessRules.JavaScript
 
         }
 
+
         /// <summary>
         /// Register a rule
         /// </summary>
@@ -324,7 +325,7 @@ namespace SanteDB.BusinessRules.JavaScript
             // Find the target type
             var targetType = new ModelSerializationBinder().BindToType(typeof(Act).GetTypeInfo().Assembly.FullName, target);
             if (targetType == null)
-                throw new KeyNotFoundException(target);
+                throw new KeyNotFoundException($"Cannot bind business rule to type : {target}");
 
             // Has this rule identifier been registered for that type?
             if (!this.m_installedTriggers.TryGetValue(targetType, out List<String> installedTriggers))
@@ -549,7 +550,7 @@ namespace SanteDB.BusinessRules.JavaScript
 
                     return retVal;
                 }
-                catch(JavaScriptException e)
+                catch (JavaScriptException e)
                 {
                     this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
                         action, data, e.Location.Source, e.LineNumber, e.CallStack, e);

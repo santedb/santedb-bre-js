@@ -49,7 +49,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         private Tracer m_tracer = Tracer.GetTracer(typeof(BusinessRulesBridge));
 
         private Regex date_regex = new Regex(@"(\d{4})-(\d{2})-(\d{2})");
-        
+
         // Map of view model names to type names
         private Dictionary<String, Type> m_modelMap = new Dictionary<string, Type>();
 
@@ -109,6 +109,11 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         }
 
         /// <summary>
+        /// Add a business rule for the specified object
+        /// </summary>
+        public void AddBusinessRule(String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate) => this.AddBusinessRule(Guid.NewGuid().ToString(), target, trigger, guard, _delegate);
+
+        /// <summary>
         /// Adds validator
         /// </summary>
         public void AddValidator(String id, String target, Func<Object, Object[]> _delegate)
@@ -116,6 +121,11 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             using (var instance = JavascriptBusinessRulesEngine.GetInstance())
                 instance.RegisterValidator(id, target, _delegate);
         }
+
+        /// <summary>
+        /// Adds validator
+        /// </summary>
+        public void AddValidator(String target, Func<Object, Object[]> _delegate) => this.AddValidator(Guid.NewGuid().ToString(), target, _delegate);
 
         /// <summary>
         /// Executes the business rule
