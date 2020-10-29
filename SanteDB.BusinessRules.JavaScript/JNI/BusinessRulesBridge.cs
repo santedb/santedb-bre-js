@@ -49,7 +49,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         private Tracer m_tracer = Tracer.GetTracer(typeof(BusinessRulesBridge));
 
         private Regex date_regex = new Regex(@"(\d{4})-(\d{2})-(\d{2})");
-        
+
         // Map of view model names to type names
         private Dictionary<String, Type> m_modelMap = new Dictionary<string, Type>();
 
@@ -86,7 +86,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// <summary>
         /// Add a business rule for the specified object
         /// </summary>
-        public void AddBusinessRule(String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate)
+        public void AddBusinessRule(String id, String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate)
         {
             NameValueCollection guardExpr = null;
             if (guard != null)
@@ -104,25 +104,35 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     guardExpr.Add(kv.Key, vals);
                 }
             }
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
-                instance.RegisterRule(target, trigger, guardExpr, _delegate);
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
+                instance.RegisterRule(id, target, trigger, guardExpr, _delegate);
+        }
+
+        /// <summary>
+        /// Add a business rule for the specified object
+        /// </summary>
+        public void AddBusinessRule(String target, String trigger, ExpandoObject guard, Func<Object, ExpandoObject> _delegate) => this.AddBusinessRule(Guid.NewGuid().ToString(), target, trigger, guard, _delegate);
+
+        /// <summary>
+        /// Adds validator
+        /// </summary>
+        public void AddValidator(String id, String target, Func<Object, Object[]> _delegate)
+        {
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
+                instance.RegisterValidator(id, target, _delegate);
         }
 
         /// <summary>
         /// Adds validator
         /// </summary>
-        public void AddValidator(String target, Func<Object, Object[]> _delegate)
-        {
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
-                instance.RegisterValidator(target, _delegate);
-        }
+        public void AddValidator(String target, Func<Object, Object[]> _delegate) => this.AddValidator(Guid.NewGuid().ToString(), target, _delegate);
 
         /// <summary>
         /// Executes the business rule
         /// </summary>
         public object ExecuteRule(String action, Object data)
         {
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
             {
                 var sData = this.ToModel(data);
                 var retVal = instance.Invoke(action, sData);
@@ -255,7 +265,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public Object ExecuteBundleRules(String trigger, Object bundle)
         {
-            using (var instance = JavascriptBusinessRulesEngine.GetThreadInstance())
+            using (var instance = JavascriptBusinessRulesEngine.GetInstance())
             {
                 try
                 {

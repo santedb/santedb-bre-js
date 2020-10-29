@@ -85,17 +85,8 @@ namespace SanteDB.BusinessRules.JavaScript
             s_debugMode = debugMode;
         }
 
-        // Multi-threaded 
-        private static bool s_multiThreaded = false;
-
         // UUID for logging
         private Guid m_engineId = Guid.NewGuid();
-
-        // BRE pool
-        private static Stack<JavascriptBusinessRulesEngine> s_brePool = new Stack<JavascriptBusinessRulesEngine>();
-
-        // Instance count
-        private int m_instanceCount = 0;
 
         // Tracer for JSBRE
         private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRulesEngine));
@@ -105,12 +96,6 @@ namespace SanteDB.BusinessRules.JavaScript
 
         // Reset event for bre pool
         private static AutoResetEvent s_poolResetEvent = new AutoResetEvent(false);
-
-        /// <summary>
-        /// Thread static instance
-        /// </summary>
-        [ThreadStatic]
-        private static JavascriptBusinessRulesEngine s_threadInstance;
 
         // Sync lock
         private static Object s_syncLock = new object();
@@ -133,6 +118,9 @@ namespace SanteDB.BusinessRules.JavaScript
         // Rules which have been run
         private List<String> m_installedRules = new List<string>();
 
+        // Installed triggers
+        private Dictionary<Type, List<String>> m_installedTriggers = new Dictionary<Type, List<string>>();
+
         /// <summary>
         /// Only one BRE can be created
         /// </summary>
@@ -153,21 +141,6 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             // Ensure the current exists
             JavascriptBusinessRulesEngine.Current.Initialize();
-
-            // Host is server, then initialize a pool
-            if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
-            {
-                s_multiThreaded = true;
-                var poolSize = Environment.ProcessorCount / 2;
-                s_brePool = new Stack<JavascriptBusinessRulesEngine>(poolSize);
-                for (int i = 0; i < poolSize; i++)
-                {
-                    var bre = new JavascriptBusinessRulesEngine();
-                    bre.Initialize();
-                    s_brePool.Push(bre);
-                }
-            }
-
         }
 
         /// <summary>
@@ -175,10 +148,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public static void AddExposedObject(String identifier, Object jniObject)
         {
-            s_threadInstance = JavascriptBusinessRulesEngine.Current;
-            s_threadInstance.Engine.SetValue(identifier, jniObject);
-            foreach (var i in s_brePool)
-                i.Engine.SetValue(identifier, jniObject);
+            JavascriptBusinessRulesEngine.Current.Engine.SetValue(identifier, jniObject);
         }
 
         /// <summary>
@@ -186,15 +156,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public static void AddRulesGlobal(String ruleId, StreamReader script)
         {
-            s_threadInstance = JavascriptBusinessRulesEngine.Current;
             JavascriptBusinessRulesEngine.Current.AddRules(ruleId, script);
-            foreach (var i in s_brePool)
-            {
-                script.BaseStream.Seek(0, SeekOrigin.Begin);
-                s_threadInstance = i;
-                i.AddRules(ruleId, script);
-            }
-            s_threadInstance = null;
         }
 
         /// <summary>
@@ -212,7 +174,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     typeof(IBusinessRulesService<>).GetTypeInfo().Assembly
                 )
                 .Strict(false)
-                .CatchClrExceptions(o => true)
+                .CatchClrExceptions(o => !(o is DetectedIssueException))
 #if DEBUG
                 .DebugMode(true)
 #else
@@ -234,61 +196,15 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Gets an instance specifically for this executing thread 
         /// </summary>
-        public static JavascriptBusinessRulesEngine GetThreadInstance()
+        public static JavascriptBusinessRulesEngine GetInstance()
         {
-            if (s_multiThreaded)
-            {
-                if (s_threadInstance == null)
-                {
-                    // This block of code attempts to get a free business rule service from the available pool, if one is not available
-                    // it will go into a wait state and will block, re-activating when another engine is disposed.
-                    try
-                    {
-                        Monitor.Enter(s_syncLock);
-                        if (s_brePool.Count > 0)
-                        {
-                            s_threadInstance = s_brePool.Pop();
-                            s_threadInstance.m_instanceCount++;
-                            Monitor.Exit(s_syncLock); // dispose of lock
-                        }
-                        else
-                        {
-                            while (s_brePool.Count == 0)
-                            {
-                                Monitor.Exit(s_syncLock);
-                                s_instance.m_tracer.TraceVerbose("JSBRE Pool exhausted, awaiting free engine");
-                                s_poolResetEvent.WaitOne();
-                                Monitor.Enter(s_syncLock);
-                            }
-                            s_threadInstance = s_brePool.Pop();
-                            s_threadInstance.m_instanceCount++;
-
-                            Monitor.Exit(s_syncLock);
-                        }
-
-                        s_threadInstance.m_tracer.TraceVerbose("Allocated JSBRE Instance - ID # {0}, Pool = {1}", s_threadInstance.m_engineId, s_brePool.Count);
-
-                    }
-                    finally
-                    {
-                        // Release lock
-                        if (Monitor.IsEntered(s_syncLock))
-                            Monitor.Exit(s_syncLock);
-                    }
-                }
-                else
-                    s_threadInstance.m_instanceCount++;
-                return s_threadInstance;
-            }
-            else
-                return JavascriptBusinessRulesEngine.Current;
+            return JavascriptBusinessRulesEngine.Current;
         }
 
         /// <summary>
         /// Gets the executing file key 
         /// </summary>
         public String ExecutingFile { get; set; }
-
 
         /// <summary>
         /// Current BRE
@@ -363,18 +279,31 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Register a validator which is responsible for validation
         /// </summary>
-        public void RegisterValidator(string target, Func<object, Object[]> _delegate)
+        public void RegisterValidator(string id, string target, Func<object, Object[]> _delegate)
         {
+            // Find the target type
+            var targetType = typeof(Act).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id == target);
+            if (targetType == null)
+                throw new KeyNotFoundException(target);
+
+            // Has this rule identifier been registered for that type?
+            if (!this.m_installedTriggers.TryGetValue(targetType, out List<String> installedTriggers))
+                lock (this.m_localLock)
+                    this.m_installedTriggers.Add(targetType, new List<string>());
+            if (installedTriggers.Contains(id))
+            {
+                this.m_tracer.TraceWarning("Rule {0} on type {1} has already been registered, skipping", id, targetType);
+                return;
+            }
+            else
+                installedTriggers.Add(id);
 
             List<Func<object, Object[]>> validatorFunc = null;
             if (!this.m_validatorDefinitions.TryGetValue(target, out validatorFunc))
             {
                 this.m_tracer.TraceVerbose("Will try to create BRE service for {0}", target);
                 // We need to create a rule service base and register it!!! :)
-                // Find the target type
-                var targetType = typeof(Act).GetTypeInfo().Assembly.ExportedTypes.FirstOrDefault(o => o.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id == target);
-                if (targetType == null)
-                    throw new KeyNotFoundException(target);
+
                 var ruleService = typeof(RuleServiceBase<>).MakeGenericType(targetType);
                 ApplicationServiceContext.Current.AddBusinessRule(ruleService);
 
@@ -387,15 +316,31 @@ namespace SanteDB.BusinessRules.JavaScript
 
         }
 
+
         /// <summary>
         /// Register a rule
         /// </summary>
-        public void RegisterRule(string target, string trigger, NameValueCollection guard, Func<object, ExpandoObject> _delegate)
+        public void RegisterRule(string id, string target, string trigger, NameValueCollection guard, Func<object, ExpandoObject> _delegate)
         {
             // Find the target type
             var targetType = new ModelSerializationBinder().BindToType(typeof(Act).GetTypeInfo().Assembly.FullName, target);
             if (targetType == null)
-                throw new KeyNotFoundException(target);
+                throw new KeyNotFoundException($"Cannot bind business rule to type : {target}");
+
+            // Has this rule identifier been registered for that type?
+            if (!this.m_installedTriggers.TryGetValue(targetType, out List<String> installedTriggers))
+            {
+                installedTriggers = new List<string>();
+                lock (this.m_localLock)
+                    this.m_installedTriggers.Add(targetType, installedTriggers);
+            }
+            if (installedTriggers.Contains(id))
+            {
+                this.m_tracer.TraceWarning("Rule {0} on type {1} has already been registered, skipping", id, targetType);
+                return;
+            }
+            else
+                installedTriggers.Add(id);
 
             Dictionary<String, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>> triggerHandler = null;
             if (!this.m_triggerDefinitions.TryGetValue(target, out triggerHandler))
@@ -605,7 +550,7 @@ namespace SanteDB.BusinessRules.JavaScript
 
                     return retVal;
                 }
-                catch(JavaScriptException e)
+                catch (JavaScriptException e)
                 {
                     this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
                         action, data, e.Location.Source, e.LineNumber, e.CallStack, e);
@@ -696,18 +641,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public void Dispose()
         {
-            if (this != JavascriptBusinessRulesEngine.Current) // push the thread instance back on the queue
-            {
-                if (m_instanceCount <= 1 && !s_brePool.ToArray().Any(o => o.m_engineId == this.m_engineId))
-                    lock (s_syncLock)
-                    {
-                        s_brePool.Push(this);
-                        s_threadInstance = null;
-                        this.m_tracer.TraceVerbose("Released JSBRE Instance - ID # {0}, Pool = {1}", this.m_engineId, s_brePool.Count);
-                    }
-                m_instanceCount--;
-                s_poolResetEvent.Set();
-            }
+            this.m_engine.BreakPoints.Clear();
         }
 
         /// <summary>
