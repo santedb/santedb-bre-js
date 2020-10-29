@@ -85,17 +85,8 @@ namespace SanteDB.BusinessRules.JavaScript
             s_debugMode = debugMode;
         }
 
-        // Multi-threaded 
-        private static bool s_multiThreaded = false;
-
         // UUID for logging
         private Guid m_engineId = Guid.NewGuid();
-
-        // BRE pool
-        private static Stack<JavascriptBusinessRulesEngine> s_brePool = new Stack<JavascriptBusinessRulesEngine>();
-
-        // Instance count
-        private int m_instanceCount = 0;
 
         // Tracer for JSBRE
         private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRulesEngine));
@@ -105,12 +96,6 @@ namespace SanteDB.BusinessRules.JavaScript
 
         // Reset event for bre pool
         private static AutoResetEvent s_poolResetEvent = new AutoResetEvent(false);
-
-        /// <summary>
-        /// Thread static instance
-        /// </summary>
-        [ThreadStatic]
-        private static JavascriptBusinessRulesEngine s_threadInstance;
 
         // Sync lock
         private static Object s_syncLock = new object();
@@ -153,21 +138,6 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             // Ensure the current exists
             JavascriptBusinessRulesEngine.Current.Initialize();
-
-            // Host is server, then initialize a pool
-            if (ApplicationServiceContext.Current.HostType == SanteDBHostType.Server)
-            {
-                s_multiThreaded = true;
-                var poolSize = Environment.ProcessorCount / 2;
-                s_brePool = new Stack<JavascriptBusinessRulesEngine>(poolSize);
-                for (int i = 0; i < poolSize; i++)
-                {
-                    var bre = new JavascriptBusinessRulesEngine();
-                    bre.Initialize();
-                    s_brePool.Push(bre);
-                }
-            }
-
         }
 
         /// <summary>
@@ -175,10 +145,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public static void AddExposedObject(String identifier, Object jniObject)
         {
-            s_threadInstance = JavascriptBusinessRulesEngine.Current;
-            s_threadInstance.Engine.SetValue(identifier, jniObject);
-            foreach (var i in s_brePool)
-                i.Engine.SetValue(identifier, jniObject);
+            JavascriptBusinessRulesEngine.Current.Engine.SetValue(identifier, jniObject);
         }
 
         /// <summary>
@@ -186,15 +153,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public static void AddRulesGlobal(String ruleId, StreamReader script)
         {
-            s_threadInstance = JavascriptBusinessRulesEngine.Current;
             JavascriptBusinessRulesEngine.Current.AddRules(ruleId, script);
-            foreach (var i in s_brePool)
-            {
-                script.BaseStream.Seek(0, SeekOrigin.Begin);
-                s_threadInstance = i;
-                i.AddRules(ruleId, script);
-            }
-            s_threadInstance = null;
         }
 
         /// <summary>
@@ -234,61 +193,15 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Gets an instance specifically for this executing thread 
         /// </summary>
-        public static JavascriptBusinessRulesEngine GetThreadInstance()
+        public static JavascriptBusinessRulesEngine GetInstance()
         {
-            if (s_multiThreaded)
-            {
-                if (s_threadInstance == null)
-                {
-                    // This block of code attempts to get a free business rule service from the available pool, if one is not available
-                    // it will go into a wait state and will block, re-activating when another engine is disposed.
-                    try
-                    {
-                        Monitor.Enter(s_syncLock);
-                        if (s_brePool.Count > 0)
-                        {
-                            s_threadInstance = s_brePool.Pop();
-                            s_threadInstance.m_instanceCount++;
-                            Monitor.Exit(s_syncLock); // dispose of lock
-                        }
-                        else
-                        {
-                            while (s_brePool.Count == 0)
-                            {
-                                Monitor.Exit(s_syncLock);
-                                s_instance.m_tracer.TraceVerbose("JSBRE Pool exhausted, awaiting free engine");
-                                s_poolResetEvent.WaitOne();
-                                Monitor.Enter(s_syncLock);
-                            }
-                            s_threadInstance = s_brePool.Pop();
-                            s_threadInstance.m_instanceCount++;
-
-                            Monitor.Exit(s_syncLock);
-                        }
-
-                        s_threadInstance.m_tracer.TraceVerbose("Allocated JSBRE Instance - ID # {0}, Pool = {1}", s_threadInstance.m_engineId, s_brePool.Count);
-
-                    }
-                    finally
-                    {
-                        // Release lock
-                        if (Monitor.IsEntered(s_syncLock))
-                            Monitor.Exit(s_syncLock);
-                    }
-                }
-                else
-                    s_threadInstance.m_instanceCount++;
-                return s_threadInstance;
-            }
-            else
-                return JavascriptBusinessRulesEngine.Current;
+            return JavascriptBusinessRulesEngine.Current;
         }
 
         /// <summary>
         /// Gets the executing file key 
         /// </summary>
         public String ExecutingFile { get; set; }
-
 
         /// <summary>
         /// Current BRE
@@ -696,18 +609,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public void Dispose()
         {
-            if (this != JavascriptBusinessRulesEngine.Current) // push the thread instance back on the queue
-            {
-                if (m_instanceCount <= 1 && !s_brePool.ToArray().Any(o => o.m_engineId == this.m_engineId))
-                    lock (s_syncLock)
-                    {
-                        s_brePool.Push(this);
-                        s_threadInstance = null;
-                        this.m_tracer.TraceVerbose("Released JSBRE Instance - ID # {0}, Pool = {1}", this.m_engineId, s_brePool.Count);
-                    }
-                m_instanceCount--;
-                s_poolResetEvent.Set();
-            }
+            this.m_engine.BreakPoints.Clear();
         }
 
         /// <summary>
