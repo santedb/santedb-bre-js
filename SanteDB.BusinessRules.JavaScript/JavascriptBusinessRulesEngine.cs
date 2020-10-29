@@ -212,7 +212,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     typeof(IBusinessRulesService<>).GetTypeInfo().Assembly
                 )
                 .Strict(false)
-                .CatchClrExceptions(o => true)
+                .CatchClrExceptions(o => !(o is DetectedIssueException))
 #if DEBUG
                 .DebugMode(true)
 #else
