@@ -113,7 +113,7 @@ namespace SanteDB.BusinessRules.JavaScript
         private Dictionary<String, Dictionary<String, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>>> m_triggerDefinitions = new Dictionary<string, Dictionary<string, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>>>();
 
         // Validators
-        private Dictionary<String, List<Func<Object, Object[]>>> m_validatorDefinitions = new Dictionary<string, List<Func<object, Object[]>>>();
+        private Dictionary<String, List<KeyValuePair<String, Func<Object, Object[]>>>> m_validatorDefinitions = new Dictionary<string, List<KeyValuePair<String, Func<Object, Object[]>>>>();
 
         // Rules which have been run
         private List<String> m_installedRules = new List<string>();
@@ -260,7 +260,6 @@ namespace SanteDB.BusinessRules.JavaScript
                             {
                                 this.m_tracer.TraceWarning("Ich bin der roboter: Will skip {0} due to {1}", include, e.Message);
                             }
-
                     }
 
                     this.m_installedRules.Add(ruleId);
@@ -298,7 +297,7 @@ namespace SanteDB.BusinessRules.JavaScript
             else
                 installedTriggers.Add(id);
 
-            List<Func<object, Object[]>> validatorFunc = null;
+            List<KeyValuePair<String, Func<object, Object[]>>> validatorFunc = null;
             if (!this.m_validatorDefinitions.TryGetValue(target, out validatorFunc))
             {
                 this.m_tracer.TraceVerbose("Will try to create BRE service for {0}", target);
@@ -309,10 +308,10 @@ namespace SanteDB.BusinessRules.JavaScript
 
                 // Now add
                 lock (this.m_localLock)
-                    this.m_validatorDefinitions.Add(target, new List<Func<object, Object[]>>() { _delegate });
+                    this.m_validatorDefinitions.Add(target, new List<KeyValuePair<String, Func<object, Object[]>>>() { new KeyValuePair<string, Func<object, object[]>>(id, _delegate) });
             }
             else
-                validatorFunc.Add(_delegate);
+                validatorFunc.Add(new KeyValuePair<string, Func<object, object[]>>(id, _delegate));
 
         }
 
@@ -355,10 +354,13 @@ namespace SanteDB.BusinessRules.JavaScript
 
                 // Now add
                 lock (this.m_localLock)
+                {
+                    guard.Add("_ruleId", id);
                     this.m_triggerDefinitions.Add(target, new Dictionary<string, List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>>()
                     {
                         { trigger, new List<KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>>() { new KeyValuePair<NameValueCollection, Func<object, ExpandoObject>>(guard, _delegate) } }
                     });
+                }
             }
             else
             {
@@ -408,7 +410,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Get all validator functions
         /// </summary>
-        public List<Func<Object, Object[]>> GetValidators<TBinding>()
+        public List<KeyValuePair<String, Func<Object, Object[]>>> GetValidators<TBinding>()
         {
             return this.GetValidators(typeof(TBinding));
         }
@@ -416,15 +418,15 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Get validator functions for binding
         /// </summary>
-        public List<Func<Object, Object[]>> GetValidators(Type tbinding)
+        public List<KeyValuePair<String, Func<Object, Object[]>>> GetValidators(Type tbinding)
         {
             var className = tbinding.GetTypeInfo().GetCustomAttribute<JsonObjectAttribute>()?.Id;
 
             // Try to get the binding
-            List<Func<object, Object[]>> callList = null;
+            List<KeyValuePair<String, Func<object, Object[]>>> callList = null;
             if (this.m_validatorDefinitions.TryGetValue(className, out callList))
                 return callList;
-            return new List<Func<object, object[]>>();
+            return new List<KeyValuePair<String, Func<object, Object[]>>>();
         }
 
         /// <summary>
@@ -433,45 +435,49 @@ namespace SanteDB.BusinessRules.JavaScript
         public object InvokeRaw(String action, Object data)
         {
             lock (this.m_localLock)
-                try
+            {
+                var binder = new SanteDB.Core.Model.Serialization.ModelSerializationBinder();
+
+                var sdata = data as IDictionary<String, Object>;
+                if (sdata == null || !sdata.ContainsKey("$type")) return data;
+
+                var callList = this.GetCallList(binder.BindToType("SanteDB.Core.Model, Version=1.1.0.0", sdata["$type"].ToString()), action);
+                var retVal = data;
+
+                if (callList.Count > 0)
                 {
-                    var binder = new SanteDB.Core.Model.Serialization.ModelSerializationBinder();
-
-                    var sdata = data as IDictionary<String, Object>;
-                    if (sdata == null || !sdata.ContainsKey("$type")) return data;
-
-                    var callList = this.GetCallList(binder.BindToType("SanteDB.Core.Model, Version=1.1.0.0", sdata["$type"].ToString()), action);
-                    var retVal = data;
-
-                    if (callList.Count > 0)
+                    foreach (var c in callList)
                     {
-                        foreach (var c in callList)
+                        try
                         {
                             if (c.Key == null || this.GuardEval(c.Key, sdata))
                                 data = c.Value(data);
                         }
-                    }
-
-                    return data;
-                }
-                catch (JavaScriptException e)
-                {
-                    this.m_tracer.TraceError("JAVASCRIPT ERROR RUNNING {0} OBJECT :::::> {3}@{2}\r\n{1}", action, this.ProduceLiteral(data), e.LineNumber, e);
-                    throw new DetectedIssueException(new List<DetectedIssue>()
-                    {
-                        new DetectedIssue()
+                        catch (JavaScriptException e)
                         {
-                            Priority = DetectedIssuePriorityType.Error,
-                            Text = $"{e.Error.ToString()} @ {e.Location.Start.Line} - {e.Location.End.Line}"
-                        }
-                    });
+                            this.m_tracer.TraceError("JAVASCRIPT ERROR RUNNING {0} OBJECT :::::> {3}@{2}\r\n{1}", action, this.ProduceLiteral(data), e.LineNumber, e);
+                            throw new DetectedIssueException(new List<DetectedIssue>()
+                            {
+                                new DetectedIssue()
+                                {
+                                    Priority = DetectedIssuePriorityType.Error,
+                                    Text = $"Error executing {action} (rule id: {String.Join(" ", c.Key?["_ruleId"])}) {e.Error.ToString()} @ {e.Location.Start.Line} - {e.Location.End.Line}"
+                                }
+                            });
 
+                        }
+                        catch (Exception e)
+                        {
+                            this.m_tracer.TraceError("Error running {0} for {1} : {2}", action, this.ProduceLiteral(data), e);
+                            throw new BusinessRulesExecutionException($"Error running business rule {action} for {this.ProduceLiteral(data)} - {e.Message}", e);
+                        }
+
+                    }
                 }
-                catch (Exception e)
-                {
-                    this.m_tracer.TraceError("Error running {0} for {1} : {2}", action, this.ProduceLiteral(data), e);
-                    throw new BusinessRulesExecutionException($"Error running business rule {action} for {this.ProduceLiteral(data)} - {e.Message}", e);
-                }
+
+                return data;
+            }
+
         }
 
         /// <summary>
@@ -541,25 +547,28 @@ namespace SanteDB.BusinessRules.JavaScript
                         dynamic viewModel = this.m_bridge.ToViewModel(retVal);
                         foreach (var c in callList)
                         {
-                            // There is a guard so let's execute it
-                            if (c.Key == null || QueryExpressionParser.BuildLinqExpression<TBinding>(c.Key).Compile()(data))
-                                viewModel = c.Value(viewModel);
+                            try
+                            {
+                                // There is a guard so let's execute it
+                                if (c.Key == null || QueryExpressionParser.BuildLinqExpression<TBinding>(c.Key).Compile()(data))
+                                    viewModel = c.Value(viewModel);
+                            }
+                            catch (JavaScriptException e)
+                            {
+                                this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
+                                    action, data, e.Location.Source, e.LineNumber, e.CallStack, e);
+                                throw new BusinessRulesExecutionException($"Error running business rule {String.Join(" ", c.Key?["_ruleId"])} - {action} for {data}", e);
+                            }
+                            catch (Exception e)
+                            {
+                                this.m_tracer.TraceError("Error running {0} for {1} : {2}", action, data, e);
+                                throw new BusinessRulesExecutionException($"Error running business rule {String.Join(" ", c.Key?["_ruleId"])} - {action} for {data}", e);
+                            }
                         }
                         retVal = (TBinding)this.m_bridge.ToModel(viewModel);
                     }
 
                     return retVal;
-                }
-                catch (JavaScriptException e)
-                {
-                    this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
-                        action, data, e.Location.Source, e.LineNumber, e.CallStack, e);
-                    throw new BusinessRulesExecutionException($"Error running business rule {action} for {data}", e);
-                }
-                catch (Exception e)
-                {
-                    this.m_tracer.TraceError("Error running {0} for {1} : {2}", action, data, e);
-                    throw new BusinessRulesExecutionException($"Error running business rule {action} for {data}", e);
                 }
                 finally
                 {
@@ -584,41 +593,44 @@ namespace SanteDB.BusinessRules.JavaScript
                     var vmData = this.m_bridge.ToViewModel(data);
                     foreach (var c in callList)
                     {
-                        object[] issues = null;
-                        issues = c(vmData);
-                        retVal.AddRange(issues.Cast<IDictionary<String, Object>>().Select(o => new DetectedIssue()
+                        try
                         {
-                            Text = o.ContainsKey("text") ? o["text"]?.ToString() : null,
-                            Priority = o.ContainsKey("priority") ? (DetectedIssuePriorityType)(int)(double)o["priority"] : DetectedIssuePriorityType.Information,
-                            TypeKey = o.ContainsKey("type") ? Guid.Parse(o["type"].ToString()) : DetectedIssueKeys.BusinessRuleViolationIssue
-                        }));
+                            object[] issues = null;
+                            issues = c.Value(vmData);
+                            retVal.AddRange(issues.Cast<IDictionary<String, Object>>().Select(o => new DetectedIssue()
+                            {
+                                Text = o.ContainsKey("text") ? o["text"]?.ToString() : null,
+                                Priority = o.ContainsKey("priority") ? (DetectedIssuePriorityType)(int)(double)o["priority"] : DetectedIssuePriorityType.Information,
+                                TypeKey = o.ContainsKey("type") ? Guid.Parse(o["type"].ToString()) : DetectedIssueKeys.BusinessRuleViolationIssue
+                            }));
+                        }
+                        catch (JavaScriptException e)
+                        {
+                            this.m_tracer.TraceError("Error validating {0} (rule: {1}) : {2}", data, c.Key, e);
+                            return new List<DetectedIssue>()
+                            {
+                                new DetectedIssue()
+                                {
+                                    Priority = DetectedIssuePriorityType.Error,
+                                    Text = $"Error validating {data} (rule: {c.Key}) - {e.Message} @ {e.LineNumber}"
+                                }
+                            };
+
+                        }
+                        catch (Exception e)
+                        {
+                            this.m_tracer.TraceError("Error validating {0} (rule: {1}) : {2}", data, c.Key, e);
+                            return new List<DetectedIssue>()
+                            {
+                                new DetectedIssue()
+                                {
+                                    Priority = DetectedIssuePriorityType.Error,
+                                    Text = $"Error validating {data} (rule: {c.Key}) - {e.Message}"
+                                }
+                            };
+                        }
                     }
                     return retVal;
-                }
-                catch (JavaScriptException e)
-                {
-                    this.m_tracer.TraceError("JAVASCRIPT ERROR VALIDATING OBJECT :::::> {1}@{0}", e.LineNumber, e);
-                    return new List<DetectedIssue>()
-                {
-                    new DetectedIssue()
-                    {
-                        Priority = DetectedIssuePriorityType.Error,
-                        Text = $"{e.Message} @ {e.LineNumber}"
-                    }
-                };
-
-                }
-                catch (Exception e)
-                {
-                    this.m_tracer.TraceError("Error validating {0} : {1}", data, e);
-                    return new List<DetectedIssue>()
-                    {
-                        new DetectedIssue()
-                        {
-                            Priority = DetectedIssuePriorityType.Error,
-                            Text = e.Message
-                        }
-                    };
                 }
                 finally
                 {
