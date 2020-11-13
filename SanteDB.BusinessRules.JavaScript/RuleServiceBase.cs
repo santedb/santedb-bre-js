@@ -19,7 +19,9 @@
  */
 using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Model;
+using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Collection;
+using SanteDB.Core.Model.Entities;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
@@ -60,11 +62,22 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <returns>The result of the trigger</returns>
         private TBinding InvokeTrigger(String triggerName, TBinding data)
         {
-            if (JavascriptBusinessRulesEngine.Current.HasRule<TBinding>(triggerName, data?.GetType()))
-                lock (this.m_lockObject)
-                    return JavascriptBusinessRulesEngine.Current.Invoke(triggerName, data);
-            else
+            try
+            {
+                if (JavascriptBusinessRulesEngine.Current.HasRule<TBinding>(triggerName, data?.GetType()))
+                    lock (this.m_lockObject)
+                        return JavascriptBusinessRulesEngine.Current.Invoke(triggerName, data);
+                else
+                    return data;
+            }
+            catch (Exception e)
+            {
+                if (data is Entity entity)
+                    entity.Tags.Add(new Core.Model.DataTypes.EntityTag("$bre.error", e.Message));
+                else if (data is Act act)
+                    act.Tags.Add(new Core.Model.DataTypes.ActTag("$bre.error", e.Message));
                 return data;
+            }
         }
 
         /// <summary>
