@@ -18,6 +18,7 @@
  * Date: 2019-11-27
  */
 using SanteDB.Core.BusinessRules;
+using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Collection;
@@ -39,6 +40,9 @@ namespace SanteDB.BusinessRules.JavaScript
 
         // Object for guarding the single threaded JavaScript engine
         private object m_lockObject = new object();
+
+        // Tracer
+        private Tracer m_tracer = Tracer.GetTracer(typeof(RuleServiceBase<TBinding>));
 
         /// <summary>
         /// Gets the service name
@@ -72,6 +76,8 @@ namespace SanteDB.BusinessRules.JavaScript
             }
             catch (Exception e)
             {
+                // TODO: Refactor this to the DetectedIssue extension
+                this.m_tracer.TraceWarning("Error running {0} on {1} - The business rule has been ignored - {2}", triggerName, data, e);
                 if (data is Entity entity)
                     entity.Tags.Add(new Core.Model.DataTypes.EntityTag("$bre.error", e.Message));
                 else if (data is Act act)
