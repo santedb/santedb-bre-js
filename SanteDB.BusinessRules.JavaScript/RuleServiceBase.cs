@@ -18,8 +18,11 @@
  * Date: 2019-11-27
  */
 using SanteDB.Core.BusinessRules;
+using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
+using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Collection;
+using SanteDB.Core.Model.Entities;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
@@ -37,6 +40,9 @@ namespace SanteDB.BusinessRules.JavaScript
 
         // Object for guarding the single threaded JavaScript engine
         private object m_lockObject = new object();
+
+        // Tracer
+        private Tracer m_tracer = Tracer.GetTracer(typeof(RuleServiceBase<TBinding>));
 
         /// <summary>
         /// Gets the service name
@@ -60,11 +66,24 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <returns>The result of the trigger</returns>
         private TBinding InvokeTrigger(String triggerName, TBinding data)
         {
-            if (JavascriptBusinessRulesEngine.Current.HasRule<TBinding>(triggerName, data?.GetType()))
-                lock (this.m_lockObject)
-                    return JavascriptBusinessRulesEngine.Current.Invoke(triggerName, data);
-            else
+            try
+            {
+                if (JavascriptBusinessRulesEngine.Current.HasRule<TBinding>(triggerName, data?.GetType()))
+                    lock (this.m_lockObject)
+                        return JavascriptBusinessRulesEngine.Current.Invoke(triggerName, data);
+                else
+                    return data;
+            }
+            catch (Exception e)
+            {
+                // TODO: Refactor this to the DetectedIssue extension
+                this.m_tracer.TraceWarning("Error running {0} on {1} - The business rule has been ignored - {2}", triggerName, data, e);
+                if (data is Entity entity)
+                    entity.Tags.Add(new Core.Model.DataTypes.EntityTag("$bre.error", e.Message));
+                else if (data is Act act)
+                    act.Tags.Add(new Core.Model.DataTypes.ActTag("$bre.error", e.Message));
                 return data;
+            }
         }
 
         /// <summary>

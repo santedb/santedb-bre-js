@@ -321,6 +321,9 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public void RegisterRule(string id, string target, string trigger, NameValueCollection guard, Func<object, ExpandoObject> _delegate)
         {
+            if (guard == null)
+                guard = new NameValueCollection();
+
             // Find the target type
             var targetType = new ModelSerializationBinder().BindToType(typeof(Act).GetTypeInfo().Assembly.FullName, target);
             if (targetType == null)
@@ -493,7 +496,8 @@ namespace SanteDB.BusinessRules.JavaScript
             {
                 if (gc.Key.Contains(".") || gc.Key.Contains("["))
                     throw new InvalidOperationException("Rule guards can only be simple property paths");
-
+                if (gc.Key.StartsWith("_"))
+                    continue; // ignore control parms
                 bool subCond = false;
                 foreach (var v in gc.Value)
                 {
