@@ -24,7 +24,7 @@
   <PropertyGroup>
     <PackageId>SanteDB.BusinessRules.JavaScript</PackageId>
     <Title>SanteDB.BusinessRules.JavaScript</Title>
-    <Version>2.0.58</Version>
+    <Version>2.0.59</Version>
     <Description>SanteDB JavaScript-based business rules triggers. Allows for the implementation of business rules in JavaScript 5</Description>
     <Authors>SanteSuite Contributors</Authors>
     <PackageTags>SanteDB</PackageTags>
@@ -115,16 +115,16 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <PackageReference Include="SanteDB.Core.Api" Version="2.0.58.0" />
-        <PackageReference Include="SanteDB.Core.Applets" Version="2.0.58.0" />
-        <PackageReference Include="SanteDB.Core.Model" Version="2.0.58.0" />
-        <PackageReference Include="SanteDB.Core.Model.ViewModelSerializers" Version="2.0.58.0" />
+        <PackageReference Include="SanteDB.Core.Api" Version="2.0.59.0" />
+        <PackageReference Include="SanteDB.Core.Applets" Version="2.0.59.0" />
+        <PackageReference Include="SanteDB.Core.Model" Version="2.0.59.0" />
+        <PackageReference Include="SanteDB.Core.Model.ViewModelSerializers" Version="2.0.59.0" />
       </ItemGroup>
     </Otherwise>
   </Choose>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="SharpCompress" Version="0.25.0" />
+    <PackageReference Include="SharpCompress" Version="0.26.0" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
