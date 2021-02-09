@@ -18,23 +18,23 @@
  */
 using System;
 
-namespace SanteDB.BusinessRules.JavaScript
+namespace SanteDB.BusinessRules.JavaScript.Exceptions
 {
     /// <summary>
     /// Business rule exception
     /// </summary>
-    public class BusinessRulesExecutionException : Exception
+    public class JsBusinessRuleException : Exception
     {
 
-        public BusinessRulesExecutionException()
+        public JsBusinessRuleException()
         {
         }
 
-        public BusinessRulesExecutionException(string message) : base(message)
+        public JsBusinessRuleException(string message) : base(message)
         {
         }
 
-        public BusinessRulesExecutionException(string message, Exception innerException) : base(message, innerException)
+        public JsBusinessRuleException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

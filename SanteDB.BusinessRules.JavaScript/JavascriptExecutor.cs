@@ -1,4 +1,5 @@
 ﻿using Jint.Runtime;
+using SanteDB.BusinessRules.JavaScript.Exceptions;
 using SanteDB.BusinessRules.JavaScript.JNI;
 using SanteDB.BusinessRules.JavaScript.Util;
 using SanteDB.Core;
@@ -18,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using static Jint.Engine;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -102,12 +104,12 @@ namespace SanteDB.BusinessRules.JavaScript
 
         }
 
+
         // Comparer
         private IEqualityComparer<JavascriptCallbackInfo> m_javascriptComparer = new JavascriptCallbackComparer();
         
         // Serializer binder
         private ModelSerializationBinder m_binder = new ModelSerializationBinder();
-
         
         // Locking for thread
         private object m_lock = new object();
@@ -125,6 +127,11 @@ namespace SanteDB.BusinessRules.JavaScript
         private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptExecutor));
 
         /// <summary>
+        /// Gets the current engine
+        /// </summary>
+        public Jint.Engine Engine => this.m_engine;
+
+        /// <summary>
         /// Creates a new javascript execution engine
         /// </summary>
         /// <param name="debugMode">True if the engine should be started in debug mode</param>
@@ -135,7 +142,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 typeof(IBusinessRulesService<>).Assembly
                 )
             .Strict(false)
-            .CatchClrExceptions(o => !(o is DetectedIssueException))
+            .CatchClrExceptions(o => !(o is DetectedIssueException) && !(o is JsBusinessRuleException))
             .DebugMode(debugMode))
                 .SetValue("SanteDBBre", new JavascriptEngineBridge(this))
                 .SetValue("console", new JsConsoleProvider())
@@ -208,9 +215,13 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Registers the specified callback using the type name
         /// </summary>
-        public void RegisterCallback(String id, String targetResource, String trigger, NameValueCollection guard, Func<dynamic, dynamic> _delegate) =>
-            this.RegisterCallback(id, this.m_binder.BindToType(null, targetResource), trigger, guard, _delegate);
-
+        public void RegisterCallback(String id, String targetResource, String trigger, NameValueCollection guard, Func<dynamic, dynamic> _delegate)
+        {
+            var type = this.m_binder.BindToType(null, targetResource);
+            if (type == null)
+                throw new InvalidOperationException($"Could not find resource type registration {targetResource}");
+            this.RegisterCallback(id, type, trigger, guard, _delegate);
+        }
         /// <summary>
         /// Register the specified rule with this engine
         /// </summary>
@@ -346,7 +357,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         catch (Exception e)
                         {
                             this.m_tracer.TraceError("Error running {0} for {1} : {2}", triggerName, JavascriptUtils.ProduceLiteral(data), e);
-                            throw new BusinessRulesExecutionException($"Error running business rule {triggerName} for {JavascriptUtils.ProduceLiteral(data)} - {e.Message}", e);
+                            throw new JsBusinessRuleException($"Error running business rule {triggerName} for {JavascriptUtils.ProduceLiteral(data)} - {e.Message}", e);
                         }
 
                     }
@@ -391,12 +402,12 @@ namespace SanteDB.BusinessRules.JavaScript
                             {
                                 this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
                                     triggerName, data, e.Location.Source, e.LineNumber, e.CallStack, e);
-                                throw new BusinessRulesExecutionException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
+                                throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
                             }
                             catch (Exception e)
                             {
                                 this.m_tracer.TraceError("Error running {0} for {1} : {2}", triggerName, data, e);
-                                throw new BusinessRulesExecutionException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
+                                throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
                             }
                         }
                         retVal = (TBinding)JavascriptUtils.ToModel(viewModel);

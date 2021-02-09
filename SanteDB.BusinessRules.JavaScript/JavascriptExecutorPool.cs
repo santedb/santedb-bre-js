@@ -12,7 +12,7 @@ namespace SanteDB.BusinessRules.JavaScript
     /// <summary>
     /// Represents a pool of javascript executors which can be run/executed when they are not busy
     /// </summary>
-    internal class JavascriptExecutorPool : IDisposable
+    public class JavascriptExecutorPool : IDisposable
     {
 
         // Get current thread pool
@@ -78,8 +78,10 @@ namespace SanteDB.BusinessRules.JavaScript
                 i.Dispose();
             this.m_executors = null;
             this.m_freeExecutors = null;
+
             // Notify 
             this.m_resetEvent.Set();
+            s_current = null;
         }
 
         /// <summary>
