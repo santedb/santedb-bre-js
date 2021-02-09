@@ -41,9 +41,6 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             try
             {
-
-                JavascriptBusinessRulesEngine.InitializeGlobal();
-
                 var solutionManager = ApplicationServiceContext.Current.GetService<IAppletSolutionManagerService>();
                 var solutions = solutionManager.Solutions.Select(o=>o.Meta.Id).ToList();
                 solutions.Add(String.Empty); // Add default solution
@@ -54,8 +51,8 @@ namespace SanteDB.BusinessRules.JavaScript
                     foreach(var itm in collection.SelectMany(c=>c.Assets).Where(a=>a.Name.StartsWith("rules/")))
                         using (StreamReader sr = new StreamReader(new MemoryStream(collection.RenderAssetContent(itm))))
                         {
-                            JavascriptBusinessRulesEngine.AddRulesGlobal(itm.ToString(), sr);
-                            //SanteDB.BusinessRules.JavaScript.JavascriptBusinessRulesEngine.Current.AddRules(itm.Name, sr);
+                            var script = sr.ReadToEnd();
+                            JavascriptExecutorPool.Current.ExecuteGlobal(o => o.ExecuteScript(itm.ToString(), script));
                             this.m_tracer.TraceInfo("Added rules from {0}", itm.Name);
                         }
                 }
