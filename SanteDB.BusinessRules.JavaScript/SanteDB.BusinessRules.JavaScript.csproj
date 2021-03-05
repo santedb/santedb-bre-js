@@ -24,7 +24,7 @@
   <PropertyGroup>
     <PackageId>SanteDB.BusinessRules.JavaScript</PackageId>
     <Title>SanteDB.BusinessRules.JavaScript</Title>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <Description>SanteDB JavaScript-based business rules triggers. Allows for the implementation of business rules in JavaScript 5</Description>
     <Authors>SanteSuite Contributors</Authors>
     <PackageTags>SanteDB</PackageTags>
@@ -115,10 +115,10 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <PackageReference Include="SanteDB.Core.Api" Version="2.1.0.0" />
-        <PackageReference Include="SanteDB.Core.Applets" Version="2.1.0.0" />
-        <PackageReference Include="SanteDB.Core.Model" Version="2.1.0.0" />
-        <PackageReference Include="SanteDB.Core.Model.ViewModelSerializers" Version="2.1.0.0" />
+        <PackageReference Include="SanteDB.Core.Api" Version="2.1.1.0" />
+        <PackageReference Include="SanteDB.Core.Applets" Version="2.1.1.0" />
+        <PackageReference Include="SanteDB.Core.Model" Version="2.1.1.0" />
+        <PackageReference Include="SanteDB.Core.Model.ViewModelSerializers" Version="2.1.1.0" />
       </ItemGroup>
     </Otherwise>
   </Choose>
