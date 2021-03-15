@@ -393,10 +393,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             lock (this.m_lock)
             {
-                var oldContext = AuthenticationContext.Current;
-                AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
-                try
-                {
+                using(AuthenticationContext.EnterSystemContext()) { 
                     if (data == default(TBinding)) return data;
 
                     var callList = this.GetCallList(data.GetType(), triggerName);
@@ -433,10 +430,7 @@ namespace SanteDB.BusinessRules.JavaScript
 
                     return retVal;
                 }
-                finally
-                {
-                    AuthenticationContext.Current = oldContext;
-                }
+                
             }
         }
 
@@ -447,9 +441,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             lock (this.m_lock)
             {
-                var oldContext = AuthenticationContext.Current;
-                AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
-                try
+                using(AuthenticationContext.EnterSystemContext())
                 {
                     var callList = this.GetCallList(data.GetType(), "Validate").Union(this.GetCallList<TBinding>("Validate"), this.m_javascriptComparer).Distinct();
                     var retVal = new List<DetectedIssue>();
@@ -495,10 +487,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     }
                     return retVal;
                 }
-                finally
-                {
-                    AuthenticationContext.Current = oldContext;
-                }
+                
             }
         }
 
