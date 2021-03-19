@@ -384,7 +384,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public object GetCache(String key)
         {
-            return this.m_adhocCache.Get<ExpandoObject>(key);
+            return this.m_adhocCache?.Get<ExpandoObject>(key);
         }
 
         /// <summary>
@@ -432,7 +432,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             {
                 var data = JavascriptUtils.ToModel(value);
                 var cacheKey = $"{data.Type}.{data.Key}";
-                this.m_adhocCache.Remove(cacheKey);
+                this.m_adhocCache?.Remove(cacheKey);
 
                 if (data == null) throw new ArgumentException("Could not parse value for save");
 
@@ -466,7 +466,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 if (data == null) throw new ArgumentException("Could not parse value for insert");
 
                 var cacheKey = $"{data.Type}.{data.Key}";
-                this.m_adhocCache.Remove(cacheKey);
+                this.m_adhocCache?.Remove(cacheKey);
 
                 var idp = typeof(IRepositoryService<>).MakeGenericType(data.GetType());
                 var idpInstance = ApplicationServiceContext.Current.GetService(idp) as IRepositoryService;
