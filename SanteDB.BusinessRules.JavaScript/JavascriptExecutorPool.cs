@@ -33,6 +33,11 @@ namespace SanteDB.BusinessRules.JavaScript
     public class JavascriptExecutorPool : IDisposable
     {
 
+        // The current executor on the current thread
+        // This prevents the Execute() from chained rules from re-pulling a thread from the pool
+        [ThreadStatic]
+        private static JavascriptExecutor m_executor;
+
         // Get current thread pool
         private static JavascriptExecutorPool s_current;
 
@@ -54,24 +59,29 @@ namespace SanteDB.BusinessRules.JavaScript
         public Object Execute<TData>(Func<JavascriptExecutor, TData, Object> action, TData data) where TData : IdentifiedData
         {
             // Attempt to pull a free worker off the queue
-            JavascriptExecutor worker = null;
-            while (!this.m_freeExecutors.TryPop(out worker))
+            JavascriptExecutor worker = m_executor;
+            if (worker == null) // No worker on the current thread
             {
-                this.m_resetEvent.Wait();
-                if (this.m_freeExecutors == null)
-                    throw new ObjectDisposedException("This worker pool has been disposed");
-                this.m_resetEvent.Reset();
+                while (!this.m_freeExecutors.TryPop(out worker))
+                {
+                    this.m_resetEvent.Wait();
+                    if (this.m_freeExecutors == null)
+                        throw new ObjectDisposedException("This worker pool has been disposed");
+                    this.m_resetEvent.Reset();
+                }
             }
 
             try
             {
+                m_executor = worker;
                 return action(worker, data);
             }
             finally
             {
                 // Free the worker
-                this.m_freeExecutors.Push(worker) ;
+                this.m_freeExecutors.Push(worker);
                 this.m_resetEvent.Set(); // notify free
+                m_executor = null;
             }
         }
 
