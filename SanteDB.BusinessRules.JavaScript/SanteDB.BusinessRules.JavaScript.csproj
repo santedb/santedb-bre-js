@@ -1,30 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!--<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3BFD6EE6-0267-4D82-BE7D-9B48B2F6F3D4}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SanteDB.BusinessRules.JavaScript</RootNamespace>
-    <AssemblyName>SanteDB.BusinessRules.JavaScript</AssemblyName>
-    <DefaultLanguage>en-US</DefaultLanguage>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TargetFrameworkProfile>Profile7</TargetFrameworkProfile>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-  </PropertyGroup>-->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
   </PropertyGroup>
-    
+  <PropertyGroup Condition="'$(VersionNumber)' == ''">
+    <VersionNumber>2.1.0-debug</VersionNumber>
+  </PropertyGroup>
   <PropertyGroup>
     <PackageId>SanteDB.BusinessRules.JavaScript</PackageId>
     <Title>SanteDB.BusinessRules.JavaScript</Title>
-    <Version>2.1.3</Version>
+    <Version>$(VersionNumber)</Version>
     <Description>SanteDB JavaScript-based business rules triggers. Allows for the implementation of business rules in JavaScript 5</Description>
     <Authors>SanteSuite Contributors</Authors>
     <PackageTags>SanteDB</PackageTags>
@@ -115,10 +100,10 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <PackageReference Include="SanteDB.Core.Api" Version="2.1.3.0" />
-        <PackageReference Include="SanteDB.Core.Applets" Version="2.1.3.0" />
-        <PackageReference Include="SanteDB.Core.Model" Version="2.1.3.0" />
-        <PackageReference Include="SanteDB.Core.Model.ViewModelSerializers" Version="2.1.3.0" />
+        <PackageReference Include="SanteDB.Core.Api" Version="$(VersionNumber)" />
+        <PackageReference Include="SanteDB.Core.Applets" Version="$(VersionNumber)" />
+        <PackageReference Include="SanteDB.Core.Model" Version="$(VersionNumber)" />
+        <PackageReference Include="SanteDB.Core.Model.ViewModelSerializers" Version="$(VersionNumber)" />
       </ItemGroup>
     </Otherwise>
   </Choose>
