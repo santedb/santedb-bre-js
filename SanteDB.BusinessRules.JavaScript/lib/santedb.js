@@ -475,7 +475,7 @@ if (!SanteDBWrapper)
              * @summary Wrapper for audit API
              */
             audit: new ResourceWrapper({
-                resource: "AuditData",
+                resource: "AuditEventData",
             })
         };
 
