@@ -70,30 +70,32 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
 
             Action<Object> workerCallback = (o) =>
             {
-                try
+                using (AuthenticationContext.EnterSystemContext())
                 {
-                    AuthenticationContext.Current = new AuthenticationContext(AuthenticationContext.SystemPrincipal);
-                    var worker = o as Action<JsPromiseCallback, JsPromiseCallback>;
-                    lock (tsync)
+                    try
                     {
-                        worker((f) =>
+                        var worker = o as Action<JsPromiseCallback, JsPromiseCallback>;
+                        lock (tsync)
                         {
-                            this.m_asyncResult = f;
-                            this.m_thenCallback?.Invoke(f);
-                        }, (r) =>
-                        {
-                            this.m_asyncReject = r;
-                            this.m_catchCallback?.Invoke(r);
-                        });
+                            worker((f) =>
+                            {
+                                this.m_asyncResult = f;
+                                this.m_thenCallback?.Invoke(f);
+                            }, (r) =>
+                            {
+                                this.m_asyncReject = r;
+                                this.m_catchCallback?.Invoke(r);
+                            });
+                        }
+                        this.m_completed = true;
+                        this.m_completeEvent.Set();
                     }
-                    this.m_completed = true;
-                    this.m_completeEvent.Set();
-                }
-                catch (Exception e)
-                {
-                    this.m_tracer.TraceError("Error in Promise: {0}", e);
-                    this.m_completeEvent.Set();
+                    catch (Exception e)
+                    {
+                        this.m_tracer.TraceError("Error in Promise: {0}", e);
+                        this.m_completeEvent.Set();
 
+                    }
                 }
             };
 
