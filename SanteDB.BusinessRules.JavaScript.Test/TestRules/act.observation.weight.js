@@ -32,7 +32,7 @@ SanteDBBre.AddBusinessRule("QuantityObservation", "BeforeInsert", {},
             return observation;
 
         // We need to suggest ... yay! This is the fun part
-        var rct = simplifiedObservation.participation.RecordTarget.playerModel;
+        var rct = simplifiedObservation.participation.RecordTarget[0].playerModel;
         var ageAtObservation = Math.round((simplifiedObservation.actTime - rct.dateOfBirth) / 8.64e7);
 
         // Gender concept

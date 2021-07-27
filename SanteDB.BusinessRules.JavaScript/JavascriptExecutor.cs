@@ -35,6 +35,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using static Jint.Engine;
@@ -125,10 +126,10 @@ namespace SanteDB.BusinessRules.JavaScript
 
         // Comparer
         private IEqualityComparer<JavascriptCallbackInfo> m_javascriptComparer = new JavascriptCallbackComparer();
-        
+
         // Serializer binder
         private ModelSerializationBinder m_binder = new ModelSerializationBinder();
-        
+
         // Locking for thread
         private object m_lock = new object();
 
@@ -178,7 +179,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public void AddExposedObject(String identifier, Object jniObject)
         {
-            lock(this.m_lock)
+            lock (this.m_lock)
                 this.m_engine.SetValue(identifier, jniObject);
         }
 
@@ -277,7 +278,7 @@ namespace SanteDB.BusinessRules.JavaScript
             if (bre == null) // scan deep
             {
                 bre = ApplicationServiceContext.Current.GetService(typeof(IBusinessRulesService<>).MakeGenericType(targetType)) as IBusinessRulesService;
-                while(bre?.Next != null)
+                while (bre?.Next != null)
                 {
                     if (bre.Next.GetType() == jsBreType)
                         return true;
@@ -393,7 +394,8 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             lock (this.m_lock)
             {
-                using(AuthenticationContext.EnterSystemContext()) { 
+                using (AuthenticationContext.EnterSystemContext())
+                {
                     if (data == default(TBinding)) return data;
 
                     var callList = this.GetCallList(data.GetType(), triggerName);
@@ -419,6 +421,12 @@ namespace SanteDB.BusinessRules.JavaScript
                                     triggerName, data, e.Location.Source, e.LineNumber, e.CallStack, e);
                                 throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
                             }
+                            catch (TargetInvocationException e) when (e.InnerException is JavaScriptException je)
+                            {
+                                this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
+                                    triggerName, data, je.Location.Source, je.LineNumber, je.CallStack, e);
+                                throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", je);
+                            }
                             catch (Exception e)
                             {
                                 this.m_tracer.TraceError("Error running {0} for {1} : {2}", triggerName, data, e);
@@ -430,7 +438,7 @@ namespace SanteDB.BusinessRules.JavaScript
 
                     return retVal;
                 }
-                
+
             }
         }
 
@@ -441,7 +449,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             lock (this.m_lock)
             {
-                using(AuthenticationContext.EnterSystemContext())
+                using (AuthenticationContext.EnterSystemContext())
                 {
                     var callList = this.GetCallList(data.GetType(), "Validate").Union(this.GetCallList<TBinding>("Validate"), this.m_javascriptComparer).Distinct();
                     var retVal = new List<DetectedIssue>();
@@ -487,7 +495,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     }
                     return retVal;
                 }
-                
+
             }
         }
 

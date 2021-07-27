@@ -117,7 +117,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         private JavascriptExecutorPool()
         {
-            var configuration = ApplicationServiceContext.Current.GetService<IConfigurationManager>().GetSection<JavascriptRulesConfigurationSection>();
+            var configuration = ApplicationServiceContext.Current.GetService<IConfigurationManager>()?.GetSection<JavascriptRulesConfigurationSection>();
             var concurrency = configuration?.WorkerInstances ?? Environment.ProcessorCount;
             this.m_executors = new JavascriptExecutor[concurrency];
             for (int i = 0; i < concurrency; i++)

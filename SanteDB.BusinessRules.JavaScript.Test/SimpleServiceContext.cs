@@ -22,6 +22,7 @@ using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -71,6 +72,21 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         }
 
         public void AddServiceProvider(object serviceInstance)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object CreateInjected(Type type)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TObject CreateInjected<TObject>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<TType> CreateInjectedOfAll<TType>(Assembly fromAssembly = null)
         {
             throw new NotImplementedException();
         }

@@ -19,7 +19,7 @@
 using Jint;
 using Jint.Native;
 using Jint.Runtime.Interop;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using SanteDB.Core;
 using SanteDB.Core.Interfaces;
 using SanteDB.Core.Model.Acts;
@@ -38,14 +38,14 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// <summary>
     /// Test simple business rules
     /// </summary>
-    [TestClass]
+    [TestFixture(TestName = "JS BRE Tests", Category = "BRE")]
     public class TestSimpleRules
     {
         /// <summary>
         /// Load simple rules
         /// </summary>
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
+        [OneTimeSetUp]
+        public void ClassInitialize()
         {
             ApplicationServiceContext.Current = new SimpleServiceContext();
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(TestDataReferenceResolver));
@@ -62,7 +62,8 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                 using (stream)
                 using (StreamReader streamReader = new StreamReader(stream))
                 {
-                    JavascriptBusinessRulesEngine.Current.AddRules(Guid.NewGuid().ToString(), streamReader);
+                    var script = streamReader.ReadToEnd();
+                    JavascriptExecutorPool.Current.ExecuteGlobal(o => o.ExecuteScript(Guid.NewGuid().ToString(), script));
                 }
             }
         }
@@ -70,7 +71,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// <summary>
         /// Ensures that the reference range is set properly
         /// </summary>
-        [TestMethod]
+        [Test]
         public void ObservationShouldSetReferenceRange ()
         {
             QuantityObservation qobs = new QuantityObservation()
@@ -104,7 +105,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// <summary>
         /// Tests that a patient should fail validation according to the validation function in the JS file
         /// </summary>
-        [TestMethod]
+        [Test]
         public void PatientShouldFailValidation()
         {
             var breService = ApplicationServiceContext.Current.GetService(typeof(IBusinessRulesService<Patient>)) as IBusinessRulesService<Patient>;
@@ -117,7 +118,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// <summary>
         /// Tests that a patient should fail validation according to the validation function in the JS file
         /// </summary>
-        [TestMethod]
+        [Test]
         public void PatientShouldPassValidation()
         {
             var breService = ApplicationServiceContext.Current.GetService(typeof(IBusinessRulesService<Patient>)) as IBusinessRulesService<Patient>;
@@ -127,32 +128,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             Assert.IsFalse(issues.Exists(o => o.Text == "NoGender"));
         }
 
-        /// <summary>
-        /// Test that the rules engine successfully parses and interprets rules
-        /// </summary>
-        [TestMethod]
-        public void ShouldAddBusinessRuleTest()
-        {
-            Assert.IsNotNull(JavascriptBusinessRulesEngine.Current.GetValidators<Patient>());
-            Assert.IsNotNull(JavascriptBusinessRulesEngine.Current.GetCallList<Patient>("AfterInsert"));
-        }
-
-        [TestMethod]
-        public void TestActBusinessRule()
-        {
-            Assert.IsNotNull(JavascriptBusinessRulesEngine.Current.GetCallList<Act>("AfterInsert"));
-        }
-
-        [TestMethod]
-        public void TestManufacturedMaterialBusinessRule()
-        {
-            Assert.IsNotNull(JavascriptBusinessRulesEngine.Current.GetCallList<ManufacturedMaterial>("AfterInsert"));
-        }
-
+       
         /// <summary>
         /// Test the act returns a complex object
         /// </summary>
-		[TestMethod]
+		[Test]
         public void TestShouldReturnComplexObject()
         {
             Func<String, ExpandoObject> callback = null;
@@ -168,7 +148,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// <summary>
         /// Tests that the business rule is able to convert a model object
         /// </summary>
-        [TestMethod]
+        [Test]
         public void TestShouldConvertModelObject()
         {
 
@@ -216,9 +196,8 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                 }
             });
 
-            Assert.IsInstanceOfType(patient, typeof(Patient));
+            Assert.IsInstanceOf(typeof(Patient), patient);
             Assert.AreEqual(1, patient.Participations.Count);
-            Assert.AreEqual("Stuff!!!", patient.GenderConcept.Mnemonic);
             Assert.AreEqual(2, patient.Names.FirstOrDefault().Component.Count);
             Assert.AreEqual("RecordTarget", patient.Participations[0].ParticipationRole.Mnemonic);
             Assert.IsTrue(patient.DateOfBirth.HasValue);
