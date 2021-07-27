@@ -19,13 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using SanteDB.Core.Model;
 using SanteDB.Core.Model.DataTypes;
 using SanteDB.Core.Model.Query;
 using SanteDB.Core.Services;
 
 namespace SanteDB.BusinessRules.JavaScript.Test
 {
-    internal class ConceptRepository : IRepositoryService<Concept>
+    internal class ConceptRepository : IRepositoryService<Concept>, IRepositoryService
     {
         public string ServiceName => "Dummy Concept Repo";
 
@@ -43,6 +44,17 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                     Mnemonic = "Stuff!!!"
                 }
             };
+        }
+
+        public IEnumerable<IdentifiedData> Find(Expression query)
+        {
+            return this.Find((Expression<Func<Concept, bool>>)query);
+
+        }
+
+        public IEnumerable<IdentifiedData> Find(Expression query, int offset, int? count, out int totalResults)
+        {
+            return this.Find((Expression<Func<Concept, bool>>)query, offset, count, out totalResults);
         }
 
         public Concept Get(Guid key)
@@ -69,6 +81,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             };
         }
 
+        public IdentifiedData Insert(object data)
+        {
+            throw new NotImplementedException();
+        }
+
         public Concept Obsolete(Guid key)
         {
             return new Concept()
@@ -83,6 +100,21 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             {
                 Mnemonic = "Stuff!!!"
             };
+        }
+
+        public IdentifiedData Save(object data)
+        {
+            throw new NotImplementedException();
+        }
+
+        IdentifiedData IRepositoryService.Get(Guid key)
+        {
+            throw new NotImplementedException();
+        }
+
+        IdentifiedData IRepositoryService.Obsolete(Guid key)
+        {
+            throw new NotImplementedException();
         }
     }
 }
