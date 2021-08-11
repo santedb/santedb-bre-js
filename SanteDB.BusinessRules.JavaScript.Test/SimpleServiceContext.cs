@@ -76,6 +76,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             throw new NotImplementedException();
         }
 
+        public IEnumerable<T> CreateAll<T>(params object[] parms)
+        {
+            throw new NotImplementedException();
+        }
+
         public object CreateInjected(Type type)
         {
             throw new NotImplementedException();
