@@ -374,7 +374,12 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                     }
             }
         }
-       
+
+        public void QueueUserWorkItem<TParam>(Action<TParam> action, TParam parm)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
     }
