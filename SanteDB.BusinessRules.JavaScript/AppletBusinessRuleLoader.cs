@@ -44,13 +44,13 @@ namespace SanteDB.BusinessRules.JavaScript
             try
             {
                 var solutionManager = ApplicationServiceContext.Current.GetService<IAppletSolutionManagerService>();
-                var solutions = solutionManager.Solutions.Select(o=>o.Meta.Id).ToList();
+                var solutions = solutionManager.Solutions.Select(o => o.Meta.Id).ToList();
                 solutions.Add(String.Empty); // Add default solution
 
-                foreach(var s in solutions)
+                foreach (var s in solutions)
                 {
                     var collection = solutionManager.GetApplets(s);
-                    foreach(var itm in collection.SelectMany(c=>c.Assets).Where(a=>a.Name.StartsWith("rules/")))
+                    foreach (var itm in collection.SelectMany(c => c.Assets).Where(a => a.Name.StartsWith("rules/")))
                         using (StreamReader sr = new StreamReader(new MemoryStream(collection.RenderAssetContent(itm))))
                         {
                             var script = sr.ReadToEnd();

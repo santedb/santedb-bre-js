@@ -24,7 +24,6 @@ using SanteDB.Core.Model;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace SanteDB.BusinessRules.JavaScript
@@ -93,7 +92,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <remarks>Note: The executors may be busy executing scripts</remarks>
         public void ExecuteGlobal(Action<JavascriptExecutor> exec)
         {
-            foreach(var itm in this.m_executors)
+            foreach (var itm in this.m_executors)
                 exec(itm);
         }
 
@@ -133,7 +132,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Javascript executor pool
         /// </summary>
-        static JavascriptExecutorPool ()
+        static JavascriptExecutorPool()
         {
             s_current = new JavascriptExecutorPool();
         }
