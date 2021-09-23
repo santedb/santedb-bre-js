@@ -22,7 +22,6 @@ using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
-using SanteDB.Core.Model.Collection;
 using SanteDB.Core.Model.Entities;
 using SanteDB.Core.Services;
 using System;
@@ -109,7 +108,7 @@ namespace SanteDB.BusinessRules.JavaScript
         public IEnumerable<TBinding> AfterQuery(IEnumerable<TBinding> results)
         {
             // Invoke the business rule
-            if (results.Any()) 
+            if (results.Any())
             {
                 var retVal = results.Select(o => JavascriptExecutorPool.Current.Execute((e, i) => e.Invoke("AfterQuery", i), o)).OfType<TBinding>();
                 return this.Next?.AfterQuery(retVal) ?? retVal;

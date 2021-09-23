@@ -18,28 +18,22 @@
  * User: fyfej
  * Date: 2021-8-5
  */
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using SanteDB.BusinessRules.JavaScript.Util;
 using SanteDB.Core;
-using SanteDB.Core.Applets.ViewModel.Json;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Collection;
 using SanteDB.Core.Model.Interfaces;
-using SanteDB.Core.Model.Json.Formatter;
 using SanteDB.Core.Model.Query;
 using SanteDB.Core.Model.Serialization;
 using SanteDB.Core.Services;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace SanteDB.BusinessRules.JavaScript.JNI
 {
@@ -226,7 +220,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     {
                         itms[i] = this.m_owner.InvokeRaw(trigger, itms[i]);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         //if (System.Diagnostics.Debugger.IsAttached)
                         throw;
