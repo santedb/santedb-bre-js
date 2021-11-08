@@ -2,22 +2,23 @@
  * Copyright (C) 2021 - 2021, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
  * Copyright (C) 2019 - 2021, Fyfe Software Inc. and the SanteSuite Contributors
  * Portions Copyright (C) 2015-2018 Mohawk College of Applied Arts and Technology
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you 
- * may not use this file except in compliance with the License. You may 
- * obtain a copy of the License at 
- * 
- * http://www.apache.org/licenses/LICENSE-2.0 
- * 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations under 
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * User: fyfej
  * Date: 2021-8-5
  */
+
 using SanteDB.BusinessRules.JavaScript.Util;
 using SanteDB.Core;
 using SanteDB.Core.Diagnostics;
@@ -46,7 +47,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         private IAdhocCacheService m_adhocCache;
 
         // Diagnostics tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptEngineBridge));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptEngineBridge));
 
         // The engine/executor that owns this
         private JavascriptExecutor m_owner;
@@ -195,7 +196,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             idpInstance.Remove(Guid.Parse(key));
         }
 
-
         /// <summary>
         /// Execute bundle rules
         /// </summary>
@@ -239,7 +239,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             }
         }
 
-
         /// <summary>
         /// Get service by name
         /// </summary>
@@ -267,7 +266,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         {
             return Guid.Parse(guid);
         }
-
 
         /// <summary>
         /// Get data asset
@@ -327,7 +325,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     if (idpInstance == null)
                         throw new KeyNotFoundException($"The repository service for {type} was not found. Ensure an IRepositoryService<{type}> is registered");
 
-
                     retVal = JavascriptUtils.ToViewModel(idpInstance.Get(guidId));
                     this.m_adhocCache?.Add(cacheKey, retVal, new TimeSpan(0, 0, 30));
                 }
@@ -384,7 +381,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         }
 
         /// <summary>
-        /// Finds the specified data 
+        /// Finds the specified data
         /// </summary>
         public object Find(String type, String query)
         {
@@ -481,7 +478,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 this.m_tracer.TraceError("Error inserting in  BRE: {0} - {1}", value, e);
                 throw new Exception($"Error inserting in  BRE: {value}", e);
             }
-
         }
     }
 }

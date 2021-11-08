@@ -2,22 +2,23 @@
  * Copyright (C) 2021 - 2021, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
  * Copyright (C) 2019 - 2021, Fyfe Software Inc. and the SanteSuite Contributors
  * Portions Copyright (C) 2015-2018 Mohawk College of Applied Arts and Technology
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you 
- * may not use this file except in compliance with the License. You may 
- * obtain a copy of the License at 
- * 
- * http://www.apache.org/licenses/LICENSE-2.0 
- * 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations under 
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * User: fyfej
  * Date: 2021-8-5
  */
+
 using SanteDB.Core;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Security;
@@ -28,7 +29,6 @@ using System.Threading;
 
 namespace SanteDB.BusinessRules.JavaScript.JNI
 {
-
     /// <summary>
     /// Javascript promise callback
     /// </summary>
@@ -40,18 +40,22 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
     /// </summary>
     public class JsPromiseProvider
     {
-
         // Synclock object
         [ThreadStatic]
         private static object s_syncObject = new object();
+
         // Tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(JsPromiseProvider));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JsPromiseProvider));
+
         // Then callback
         private Action<Object> m_thenCallback = null;
+
         // Catch callback
         private Action<Object> m_catchCallback = null;
+
         // Async result
         private Object m_asyncResult = null;
+
         private Object m_asyncReject = null;
         private bool m_completed = false;
         private ManualResetEventSlim m_completeEvent = new ManualResetEventSlim(false);
@@ -62,7 +66,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public JsPromiseProvider(Action<JsPromiseCallback, JsPromiseCallback> asyncFunc)
         {
-
             this.m_tracer.TraceVerbose("Creating async promise on thread pool");
             var threadPool = (IThreadPoolService)ApplicationServiceContext.Current.GetService(typeof(IThreadPoolService));
 
@@ -96,7 +99,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     {
                         this.m_tracer.TraceError("Error in Promise: {0}", e);
                         this.m_completeEvent.Set();
-
                     }
                 }
             };

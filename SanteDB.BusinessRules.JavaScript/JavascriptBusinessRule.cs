@@ -2,22 +2,23 @@
  * Copyright (C) 2021 - 2021, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
  * Copyright (C) 2019 - 2021, Fyfe Software Inc. and the SanteSuite Contributors
  * Portions Copyright (C) 2015-2018 Mohawk College of Applied Arts and Technology
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you 
- * may not use this file except in compliance with the License. You may 
- * obtain a copy of the License at 
- * 
- * http://www.apache.org/licenses/LICENSE-2.0 
- * 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations under 
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * User: fyfej
  * Date: 2021-8-5
  */
+
 using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
@@ -30,16 +31,13 @@ using System.Linq;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
-
-
     /// <summary>
     /// Represents a rule service base binding
     /// </summary>
     internal class JavascriptBusinessRule<TBinding> : IBusinessRulesService<TBinding> where TBinding : IdentifiedData
     {
-
         // Tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRule<TBinding>));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRule<TBinding>));
 
         /// <summary>
         /// Gets the service name
@@ -115,7 +113,6 @@ namespace SanteDB.BusinessRules.JavaScript
             }
             else
                 return this.Next?.AfterQuery(results) ?? results;
-
         }
 
         /// <summary>
@@ -186,7 +183,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object AfterObsolete(object data)
         {
             return this.AfterObsolete((TBinding)data);
-
         }
 
         /// <summary>
@@ -195,7 +191,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public IEnumerable<object> AfterQuery(IEnumerable<object> results)
         {
             return this.AfterQuery(results.OfType<TBinding>()).OfType<object>();
-
         }
 
         /// <summary>
@@ -212,7 +207,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object AfterUpdate(object data)
         {
             return this.AfterUpdate((TBinding)data);
-
         }
 
         /// <summary>
@@ -221,7 +215,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object BeforeInsert(object data)
         {
             return this.BeforeInsert((TBinding)data);
-
         }
 
         /// <summary>
@@ -230,7 +223,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object BeforeObsolete(object data)
         {
             return this.BeforeObsolete((TBinding)data);
-
         }
 
         /// <summary>
@@ -239,7 +231,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object BeforeUpdate(object data)
         {
             return this.BeforeUpdate((TBinding)data);
-
         }
 
         /// <summary>

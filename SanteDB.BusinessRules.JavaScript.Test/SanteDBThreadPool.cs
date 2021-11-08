@@ -2,22 +2,23 @@
  * Copyright (C) 2021 - 2021, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
  * Copyright (C) 2019 - 2021, Fyfe Software Inc. and the SanteSuite Contributors
  * Portions Copyright (C) 2015-2018 Mohawk College of Applied Arts and Technology
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you 
- * may not use this file except in compliance with the License. You may 
- * obtain a copy of the License at 
- * 
- * http://www.apache.org/licenses/LICENSE-2.0 
- * 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations under 
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * User: fyfej
  * Date: 2021-8-5
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,49 +37,62 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     public class SanteDBThreadPool : IThreadPoolService, IDisposable
     {
         public string ServiceName => "Fake News";
+
         // Tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(SanteDBThreadPool));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(SanteDBThreadPool));
+
         // Number of threads to keep alive
         private int m_concurrencyLevel = System.Environment.ProcessorCount * 2;
+
         // Queue of work items
         private Queue<WorkItem> m_queue = null;
+
         private Queue<WorkItem> m_priorityQueue = null;
+
         // Timers
         private List<Timer> m_timers = new List<Timer>();
+
         // Non queue operations
         private List<Thread> m_nonQueueOperations = new List<Thread>();
 
         // Active threads
         private Thread[] m_threadPool = null;
+
         // Hint of the number of threads waiting to be executed
         private int m_threadWait = 0;
+
         // True when the thread pool is being disposed
         private bool m_disposing = false;
 
         /// <summary>
         /// Concurrency
         /// </summary>
-        public int Concurrency { get { return this.m_concurrencyLevel; } }
+        public int Concurrency
+        { get { return this.m_concurrencyLevel; } }
 
         /// <summary>
         /// Waiting threads
         /// </summary>
-        public int WaitingThreads { get { return this.m_queue.Count + this.m_priorityQueue.Count; } }
+        public int WaitingThreads
+        { get { return this.m_queue.Count + this.m_priorityQueue.Count; } }
 
         /// <summary>
         /// Active timers
         /// </summary>
-        public int ActiveTimers { get { return this.m_timers.Count; } }
+        public int ActiveTimers
+        { get { return this.m_timers.Count; } }
 
         /// <summary>
         /// Non queue threads
         /// </summary>
-        public int NonQueueThreads { get { return this.m_nonQueueOperations.Count; } }
-        
+        public int NonQueueThreads
+        { get { return this.m_nonQueueOperations.Count; } }
+
         /// <summary>
         /// Active threads
         /// </summary>
-        public List<String> Threads {
+        public List<String> Threads
+        {
             get
             {
                 return this.m_threadPool.Select(o => o.Name).Union(this.m_timers.Select(o => "Timer")).Union(this.m_nonQueueOperations.Select(o => $"=>[NQ]=>{o.Name}")).ToList();
@@ -88,12 +102,13 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// <summary>
         /// Active threads
         /// </summary>
-        public int ActiveThreads { get { return this.m_concurrencyLevel - this.m_threadWait; } }
+        public int ActiveThreads
+        { get { return this.m_concurrencyLevel - this.m_threadWait; } }
 
         /// <summary>
         /// Creates a new instance of the wait thread pool
         /// </summary>
-        public SanteDBThreadPool() 
+        public SanteDBThreadPool()
         {
             this.m_concurrencyLevel = 2;
             this.m_queue = new Queue<WorkItem>(this.m_concurrencyLevel);
@@ -109,10 +124,12 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             /// The callback to execute on the worker
             /// </summary>
             public Action<Object> Callback { get; set; }
+
             /// <summary>
             /// The state or parameter to the worker
             /// </summary>
             public object State { get; set; }
+
             /// <summary>
             /// The execution context
             /// </summary>
@@ -121,6 +138,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         // Number of remaining work items
         private int m_remainingWorkItems = 1;
+
         // Thread is done reset event
         private ManualResetEvent m_threadDoneResetEvent = new ManualResetEvent(false);
 
@@ -205,7 +223,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                         m_queue.Enqueue(wd);
                     else // priority items get inserted at the head so that they are executed first
                         this.m_priorityQueue.Enqueue(wd);
-                                        
+
                     if (m_threadWait > 0)
                         Monitor.Pulse(m_queue);
                 }
@@ -264,7 +282,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                         else
                             wi = m_queue.Dequeue();
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         this.m_tracer.TraceError("Error in dispatchloop {0}", e);
                     }
@@ -273,12 +291,12 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             }
         }
 
-
         /// <summary>
         /// Wait until the thread is complete
         /// </summary>
         /// <returns></returns>
-        public bool WaitOne() { return WaitOne(-1, false); }
+        public bool WaitOne()
+        { return WaitOne(-1, false); }
 
         /// <summary>
         /// Wait until the thread is complete or the specified timeout elapses
@@ -315,15 +333,17 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         {
             this.m_tracer.TraceVerbose("Starting task on {0} ---> {1}", Thread.CurrentThread.Name, state.Callback.Target.ToString());
             var worker = (WorkItem)state;
-            try {
-
+            try
+            {
                 if (worker.Callback != null)
                     worker.Callback(worker.State);
             }
-            catch(Exception e) {
+            catch (Exception e)
+            {
                 this.m_tracer.TraceError("!!!!!! 0118 999 881 999 119 7253 : THREAD DEATH !!!!!!!\r\nUncaught Exception on worker thread: {0}", e);
             }
-            finally {
+            finally
+            {
                 DoneWorkItem();
             }
         }
@@ -380,7 +400,6 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             throw new NotImplementedException();
         }
 
-        #endregion
-
+        #endregion IDisposable Members
     }
 }
