@@ -24,6 +24,7 @@ using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Entities;
+using SanteDB.Core.Model.Query;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
@@ -103,16 +104,14 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// After query is complete
         /// </summary>
-        public IEnumerable<TBinding> AfterQuery(IEnumerable<TBinding> results)
+        public IQueryResultSet<TBinding> AfterQuery(IQueryResultSet<TBinding> results)
         {
-            // Invoke the business rule
-            if (results.Any())
+            IQueryResultSet<TBinding> resultSet = new NestedQueryResultSet<TBinding>(results, (o) => (TBinding)JavascriptExecutorPool.Current.Execute((e, i) => e.Invoke("AfterQuery", i), o));
+            if (this.Next != null)
             {
-                var retVal = results.Select(o => JavascriptExecutorPool.Current.Execute((e, i) => e.Invoke("AfterQuery", i), o)).OfType<TBinding>();
-                return this.Next?.AfterQuery(retVal) ?? retVal;
+                resultSet = resultSet.Union(this.Next.AfterQuery(results));
             }
-            else
-                return this.Next?.AfterQuery(results) ?? results;
+            return results;
         }
 
         /// <summary>
@@ -188,9 +187,14 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// After query occurs
         /// </summary>
-        public IEnumerable<object> AfterQuery(IEnumerable<object> results)
+        public IQueryResultSet AfterQuery(IQueryResultSet results)
         {
-            return this.AfterQuery(results.OfType<TBinding>()).OfType<object>();
+            IQueryResultSet resultSet = new NestedQueryResultSet(results, (o) => JavascriptExecutorPool.Current.Execute<TBinding>((e, i) => e.Invoke("AfterQuery", (TBinding)i), (TBinding)o));
+            if (this.Next != null)
+            {
+                resultSet = resultSet.Union(this.Next.AfterQuery(results));
+            }
+            return results;
         }
 
         /// <summary>
