@@ -19,11 +19,8 @@
  * Date: 2021-8-5
  */
 using Jint;
-using Jint.Native;
-using Jint.Runtime.Interop;
 using NUnit.Framework;
 using SanteDB.Core;
-using SanteDB.Core.Interfaces;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Constants;
 using SanteDB.Core.Model.Entities;
@@ -31,6 +28,7 @@ using SanteDB.Core.Model.Roles;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -40,7 +38,8 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// <summary>
     /// Test simple business rules
     /// </summary>
-    [TestFixture(TestName = "JS BRE Tests", Category = "BRE")]
+    [ExcludeFromCodeCoverage]
+    [TestFixture(Category = "BRE")]
     public class TestSimpleRules
     {
         /// <summary>
