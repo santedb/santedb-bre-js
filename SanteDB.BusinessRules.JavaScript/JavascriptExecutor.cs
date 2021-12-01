@@ -2,22 +2,23 @@
  * Copyright (C) 2021 - 2021, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
  * Copyright (C) 2019 - 2021, Fyfe Software Inc. and the SanteSuite Contributors
  * Portions Copyright (C) 2015-2018 Mohawk College of Applied Arts and Technology
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you 
- * may not use this file except in compliance with the License. You may 
- * obtain a copy of the License at 
- * 
- * http://www.apache.org/licenses/LICENSE-2.0 
- * 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations under 
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * User: fyfej
  * Date: 2021-8-5
  */
+
 using Jint.Runtime;
 using SanteDB.BusinessRules.JavaScript.Exceptions;
 using SanteDB.BusinessRules.JavaScript.JNI;
@@ -72,7 +73,6 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         private class JavascriptCallbackInfo
         {
-
             /// <summary>
             /// Creates a new callback info structure
             /// </summary>
@@ -98,7 +98,6 @@ namespace SanteDB.BusinessRules.JavaScript
             {
             }
 
-
             /// <summary>
             /// Gets the id of the callback
             /// </summary>
@@ -118,9 +117,7 @@ namespace SanteDB.BusinessRules.JavaScript
             /// Gets the callback
             /// </summary>
             public Delegate Callback { get; }
-
         }
-
 
         // Comparer
         private IEqualityComparer<JavascriptCallbackInfo> m_javascriptComparer = new JavascriptCallbackComparer();
@@ -169,7 +166,6 @@ namespace SanteDB.BusinessRules.JavaScript
             foreach (var itm in typeof(JavascriptExecutor).Assembly.GetManifestResourceNames().Where(o => o.EndsWith(".js")))
                 using (StreamReader sr = new StreamReader(typeof(JavascriptExecutor).Assembly.GetManifestResourceStream(itm)))
                     this.ExecuteScript(itm.Replace(typeof(JavascriptExecutor).Assembly.FullName, ""), sr.ReadToEnd());
-
         }
 
         /// <summary>
@@ -180,7 +176,6 @@ namespace SanteDB.BusinessRules.JavaScript
             lock (this.m_lock)
                 this.m_engine.SetValue(identifier, jniObject);
         }
-
 
         /// <summary>
         /// Executes the specified script contents
@@ -239,6 +234,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 throw new InvalidOperationException($"Could not find resource type registration {targetResource}");
             this.RegisterCallback(id, type, trigger, guard, _delegate);
         }
+
         /// <summary>
         /// Register the specified rule with this engine
         /// </summary>
@@ -287,6 +283,7 @@ namespace SanteDB.BusinessRules.JavaScript
             else
                 return true;
         }
+
         /// <summary>
         /// Execute the appropriate callbacks
         /// </summary>
@@ -343,7 +340,6 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             lock (this.m_lock) // Only one object can use this thread at a time
             {
-
                 var sdata = data as IDictionary<String, Object>;
                 if (sdata == null || !sdata.ContainsKey("$type")) return data;
                 var callList = this.GetCallList(this.m_binder.BindToType("SanteDB.Core.Model, Version=1.1.0.0", sdata["$type"].ToString()), triggerName);
@@ -369,20 +365,17 @@ namespace SanteDB.BusinessRules.JavaScript
                                     Text = $"Error executing {triggerName} (rule id: {c.Id}) {e.Error.ToString()} @ {e.Location.Start.Line} - {e.Location.End.Line}"
                                 }
                             });
-
                         }
                         catch (Exception e)
                         {
                             this.m_tracer.TraceError("Error running {0} for {1} : {2}", triggerName, JavascriptUtils.ProduceLiteral(data), e);
                             throw new JsBusinessRuleException($"Error running business rule {triggerName} for {JavascriptUtils.ProduceLiteral(data)} - {e.Message}", e);
                         }
-
                     }
                 }
 
                 return data;
             }
-
         }
 
         /// <summary>
@@ -431,12 +424,12 @@ namespace SanteDB.BusinessRules.JavaScript
                                 throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
                             }
                         }
-                        retVal = (TBinding)JavascriptUtils.ToModel(viewModel);
+
+                        retVal = (TBinding)JavascriptUtils.ToModel(viewModel).CopyAnnotations(retVal);
                     }
 
                     return retVal;
                 }
-
             }
         }
 
@@ -476,7 +469,6 @@ namespace SanteDB.BusinessRules.JavaScript
                                     Text = $"Error validating {data} (rule: {c.Id}) - {e.Message} @ {e.LineNumber}"
                                 }
                             };
-
                         }
                         catch (Exception e)
                         {
@@ -493,7 +485,6 @@ namespace SanteDB.BusinessRules.JavaScript
                     }
                     return retVal;
                 }
-
             }
         }
 
