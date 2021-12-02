@@ -20,6 +20,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.DataTypes;
@@ -28,6 +29,7 @@ using SanteDB.Core.Services;
 
 namespace SanteDB.BusinessRules.JavaScript.Test
 {
+    [ExcludeFromCodeCoverage]
     internal class ConceptRepository : IRepositoryService<Concept>, IRepositoryService
     {
         public string ServiceName => "Dummy Concept Repo";
