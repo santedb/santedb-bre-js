@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -34,6 +35,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// Represents a thread pool which is implemented separately from the default .net
     /// threadpool, this is to reduce the load on the .net framework thread pool
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class SanteDBThreadPool : IThreadPoolService, IDisposable
     {
         public string ServiceName => "Fake News";
