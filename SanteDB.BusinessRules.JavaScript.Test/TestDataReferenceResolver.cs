@@ -19,6 +19,7 @@
  * Date: 2021-8-5
  */
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace SanteDB.BusinessRules.JavaScript.Test
@@ -26,6 +27,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// <summary>
     /// Represents a data resolver
     /// </summary>
+    [ExcludeFromCodeCoverage]
     internal class TestDataReferenceResolver : IDataReferenceResolver
     {
         /// <summary>

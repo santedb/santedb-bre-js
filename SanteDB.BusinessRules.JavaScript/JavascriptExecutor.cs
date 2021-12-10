@@ -424,7 +424,8 @@ namespace SanteDB.BusinessRules.JavaScript
                                 throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
                             }
                         }
-                        retVal = (TBinding)JavascriptUtils.ToModel(viewModel);
+
+                        retVal = (TBinding)JavascriptUtils.ToModel(viewModel).CopyAnnotations(retVal);
                     }
 
                     return retVal;

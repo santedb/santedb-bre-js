@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -34,6 +35,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// Represents a thread pool which is implemented separately from the default .net
     /// threadpool, this is to reduce the load on the .net framework thread pool
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class SanteDBThreadPool : IThreadPoolService, IDisposable
     {
         public string ServiceName => "Fake News";
@@ -284,7 +286,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                     }
                     catch (Exception e)
                     {
-                        this.m_tracer.TraceError("Error in dispatchloop {0}", e);
+                        this.m_tracer.TraceError("Error in dispatch loop {0}", e);
                     }
                 }
                 DoWorkItem(wi);
@@ -396,6 +398,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         }
 
         public void QueueUserWorkItem<TParam>(Action<TParam> action, TParam parm)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetWorkerStatus(out int totalWorkers, out int availableWorkers, out int waitingInQueue)
         {
             throw new NotImplementedException();
         }
