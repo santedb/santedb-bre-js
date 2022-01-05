@@ -185,7 +185,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                 {
                     new ActParticipation()
                     {
-                        ParticipationRole = new Core.Model.DataTypes.Concept() { Mnemonic = "RecordTarget", Key = ActParticipationKey.RecordTarget },
+                        ParticipationRole = new Core.Model.DataTypes.Concept() { Mnemonic = "RecordTarget", Key = ActParticipationKeys.RecordTarget },
                         Act = new QuantityObservation()
                         {
                             Value = (decimal)1.2,
