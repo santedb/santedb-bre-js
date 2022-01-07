@@ -66,7 +66,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <param name="triggerName">The name of the trigger to run</param>
         /// <param name="data">The data to be used in the trigger</param>
         /// <returns>The result of the trigger</returns>
-        private TBinding InvokeTrigger(String triggerName, TBinding data)
+        protected virtual TBinding InvokeTrigger(String triggerName, TBinding data)
         {
             try
             {
