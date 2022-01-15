@@ -33,8 +33,15 @@ using System.Linq;
 namespace SanteDB.BusinessRules.JavaScript
 {
     /// <summary>
-    /// Represents a rule service base binding
+    /// Wrapper for <see cref="IBusinessRulesService"/> which calls one or more JavaScript functions
     /// </summary>
+    /// <remarks>
+    /// <para>This implementation of the business rules wrapper is used to interface with business rules written in 
+    /// <see href="https://help.santesuite.org/developers/applets/business-rules">SanteDB's JavaScript Business Rules Engine</see> and allows 
+    /// implementers to customize the behavior of the iCDR or dCDR with JavaScript within their applets. Whenever a call to the <c>SanteDBBre.AddBusinessRule()</c>
+    /// interface is called from applet initialization, a new instance of this class is chained into the execution pipeline. From there, the events raised
+    /// for before/after insert/update/obsolete/query are translated to JavaScript and the provided callback is executed.</para>
+    /// </remarks>
     internal class JavascriptBusinessRule<TBinding> : IBusinessRulesService<TBinding> where TBinding : IdentifiedData
     {
         // Tracer
@@ -65,7 +72,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <param name="triggerName">The name of the trigger to run</param>
         /// <param name="data">The data to be used in the trigger</param>
         /// <returns>The result of the trigger</returns>
-        private TBinding InvokeTrigger(String triggerName, TBinding data)
+        protected virtual TBinding InvokeTrigger(String triggerName, TBinding data)
         {
             try
             {

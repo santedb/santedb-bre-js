@@ -206,7 +206,7 @@ namespace SanteDB.BusinessRules.JavaScript
                             }
                             catch (Exception e)
                             {
-                                this.m_tracer.TraceWarning("Ich bin der roboter: Will skip {0} due to {1}", include, e.Message);
+                                this.m_tracer.TraceWarning("Will skip {0} due to {1}", include, e.Message);
                             }
                     }
 
@@ -219,7 +219,7 @@ namespace SanteDB.BusinessRules.JavaScript
             }
             catch (JavaScriptException ex)
             {
-                this.m_tracer.TraceError("Ich bin der roboter: Error executing JavaScript {0}:{1} > {2}", ex.LineNumber, ex.Column, ex);
+                this.m_tracer.TraceError("Error executing JavaScript {0}:{1} > {2}", ex.LineNumber, ex.Column, ex);
                 throw ex;
             }
         }
@@ -267,21 +267,16 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         private bool IsRegistered(Type targetType)
         {
-            var jsBreType = typeof(JavascriptBusinessRule<>).MakeGenericType(targetType);
-            var bre = ApplicationServiceContext.Current.GetService(jsBreType) as IBusinessRulesService;
-            if (bre == null) // scan deep
+            var jreType = typeof(JavascriptBusinessRule<>).MakeGenericType(targetType);
+            var bre = ApplicationServiceContext.Current.GetBusinessRuleService(targetType);
+            while (bre != null)
             {
-                bre = ApplicationServiceContext.Current.GetService(typeof(IBusinessRulesService<>).MakeGenericType(targetType)) as IBusinessRulesService;
-                while (bre?.Next != null)
-                {
-                    if (bre.Next.GetType() == jsBreType)
-                        return true;
-                    bre = bre.Next;
-                }
-                return false;
+                if (jreType.IsAssignableFrom(bre.GetType()))
+                    return true; // already registered
+                bre = bre.Next;
             }
-            else
-                return true;
+            return false;
+
         }
 
         /// <summary>

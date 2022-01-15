@@ -26,6 +26,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using SanteDB.Core.Services;
+using SanteDB.BusinessRules.JavaScript.Rules;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -47,7 +49,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 var solutionManager = ApplicationServiceContext.Current.GetService<IAppletSolutionManagerService>();
                 var solutions = solutionManager.Solutions.Select(o => o.Meta.Id).ToList();
                 solutions.Add(String.Empty); // Add default solution
-
+                ApplicationServiceContext.Current.AddBusinessRule(typeof(BundleWrapperRule));
                 foreach (var s in solutions)
                 {
                     var collection = solutionManager.GetApplets(s);
