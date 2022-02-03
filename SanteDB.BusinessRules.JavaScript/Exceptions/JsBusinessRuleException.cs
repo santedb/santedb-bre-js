@@ -19,12 +19,14 @@
  * Date: 2021-8-5
  */
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SanteDB.BusinessRules.JavaScript.Exceptions
 {
     /// <summary>
     /// Business rule exception
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class JsBusinessRuleException : Exception
     {
 
