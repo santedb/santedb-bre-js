@@ -283,7 +283,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// <summary>
         /// Gets the specified data from the underlying data-store
         /// </summary>
-        public object Obsolete(String type, Guid id)
+        public object Delete(String type, Guid id)
         {
             try
             {
@@ -294,7 +294,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 if (idpInstance == null)
                     throw new KeyNotFoundException($"The repository service for {type} was not found. Ensure an IRepositoryService<{type}> is registered");
 
-                return JavascriptUtils.ToViewModel(idpInstance.Obsolete(id));
+                return JavascriptUtils.ToViewModel(idpInstance.Delete(id));
             }
             catch (Exception e)
             {

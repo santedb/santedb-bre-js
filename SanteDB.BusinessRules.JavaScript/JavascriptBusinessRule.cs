@@ -102,10 +102,10 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// After obsoletion
         /// </summary>
-        public TBinding AfterObsolete(TBinding data)
+        public TBinding AfterDelete(TBinding data)
         {
             var retVal = this.InvokeTrigger("AfterObsolete", data);
-            return this.Next?.AfterObsolete(retVal) ?? retVal;
+            return this.Next?.AfterDelete(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -151,10 +151,10 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Before an obsoletion
         /// </summary>
-        public TBinding BeforeObsolete(TBinding data)
+        public TBinding BeforeDelete(TBinding data)
         {
             var retVal = this.InvokeTrigger("BeforeObsolete", data);
-            return this.Next?.BeforeObsolete(retVal) ?? retVal;
+            return this.Next?.BeforeDelete(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public object AfterObsolete(object data)
         {
-            return this.AfterObsolete((TBinding)data);
+            return this.AfterDelete((TBinding)data);
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public object BeforeObsolete(object data)
         {
-            return this.BeforeObsolete((TBinding)data);
+            return this.BeforeDelete((TBinding)data);
         }
 
         /// <summary>

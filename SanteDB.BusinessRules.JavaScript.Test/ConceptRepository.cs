@@ -99,7 +99,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             throw new NotImplementedException();
         }
 
-        public Concept Obsolete(Guid key)
+        public Concept Delete(Guid key)
         {
             return new Concept()
             {
@@ -125,7 +125,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             throw new NotImplementedException();
         }
 
-        IdentifiedData IRepositoryService.Obsolete(Guid key)
+        IdentifiedData IRepositoryService.Delete(Guid key)
         {
             throw new NotImplementedException();
         }
