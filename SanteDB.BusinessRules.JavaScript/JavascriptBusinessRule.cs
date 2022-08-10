@@ -83,9 +83,13 @@ namespace SanteDB.BusinessRules.JavaScript
                 // TODO: Refactor this to the DetectedIssue extension
                 this.m_tracer.TraceWarning("Error running {0} on {1} - The business rule has been ignored - {2}", triggerName, data, e);
                 if (data is Entity entity)
-                    entity.Tags.Add(new Core.Model.DataTypes.EntityTag("$bre.error", e.Message));
+                {
+                    entity.AddTag("$bre.error", e.Message);
+                }
                 else if (data is Act act)
-                    act.Tags.Add(new Core.Model.DataTypes.ActTag("$bre.error", e.Message));
+                {
+                    act.AddTag("$bre.error", e.Message);
+                }
                 return data;
             }
         }
