@@ -22,15 +22,14 @@
 
 /// <reference path="~/.ref/js/openiz-model.js"/>
 
-SanteDBBre.AddBusinessRule("QuantityObservation", "BeforeInsert", {},
+SanteDBBre.AddBusinessRule("QuantityObservation", "BeforeInsert", { typeConcept: 'a261f8cd-69b0-49aa-91f4-e6d3e5c612ed' },
     /** 
      * @param {OpenIZModel.QuantityObservation} observation
      */
     function (observation) {
 
         var simplifiedObservation = observation;
-        if (simplifiedObservation.$type != "QuantityObservation" ||
-            simplifiedObservation.typeConcept != 'a261f8cd-69b0-49aa-91f4-e6d3e5c612ed')
+        if (simplifiedObservation.$type != "QuantityObservation")
             return observation;
 
         // We need to suggest ... yay! This is the fun part
