@@ -29,6 +29,7 @@ using SanteDB.Core.Model.Serialization;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -92,7 +93,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                         vals = (kv.Value as string[]).ToList();
                     else
                         vals = new List<String>() { kv.Value.ToString() };
-                    guardExpr.Add(kv.Key, vals);
+                    vals.ForEach(o=>guardExpr.Add(kv.Key, o));
                 }
             }
             this.m_owner.RegisterCallback(id, target, trigger, guardExpr, _delegate);
@@ -341,7 +342,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public object Find(String type, ExpandoObject query)
         {
-            var queryStr = new NameValueCollection((query as IDictionary<String, object>).ToArray()).ToString();
+            var queryStr = query.ToNameValueCollection().ToHttpString();
             return Find(type, queryStr);
         }
 
@@ -350,7 +351,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public void AddCache(ExpandoObject key, ExpandoObject data)
         {
-            var queryStr = new NameValueCollection((key as IDictionary<String, object>).ToArray()).ToString();
+            var queryStr = data.ToNameValueCollection().ToHttpString();
             AddCache(queryStr, data);
         }
 
@@ -367,7 +368,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public object GetCache(ExpandoObject key)
         {
-            var queryStr = new NameValueCollection((key as IDictionary<String, object>).ToArray()).ToString();
+            var queryStr = key.ToNameValueCollection().ToHttpString();
             return GetCache(queryStr);
         }
 
@@ -395,7 +396,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 if (idpInstance == null)
                     throw new KeyNotFoundException($"The repository service for {type} was not found. Ensure an IRepositoryService<{type}> is registered");
 
-                var expr = QueryExpressionParser.BuildLinqExpression(dataType, NameValueCollection.ParseQueryString(query));
+                var expr = QueryExpressionParser.BuildLinqExpression(dataType, query.ParseQueryString());
                 var results = idpInstance.Find(expr).OfType<IdentifiedData>();
                 return JavascriptUtils.ToViewModel(new Bundle()
                 {

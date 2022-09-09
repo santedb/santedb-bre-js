@@ -33,6 +33,7 @@ using SanteDB.Core.Security;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -306,18 +307,18 @@ namespace SanteDB.BusinessRules.JavaScript
         private bool GuardEval(NameValueCollection guard, IDictionary<String, Object> data)
         {
             var retVal = true;
-            foreach (var gc in guard)
+            foreach (var gc in guard.AllKeys)
             {
-                if (gc.Key.Contains(".") || gc.Key.Contains("["))
+                if (gc.Contains(".") || gc.Contains("["))
                     throw new InvalidOperationException("Rule guards can only be simple property paths");
-                if (gc.Key.StartsWith("_"))
+                if (gc.StartsWith("_"))
                     continue; // ignore control parms
                 bool subCond = false;
-                foreach (var v in gc.Value)
+                foreach (var v in guard.GetValues( gc))
                 {
-                    if (gc.Value.First() == "null")
-                        subCond |= !data.ContainsKey(gc.Key) || data[gc.Key] == null;
-                    else if (data.TryGetValue(gc.Key, out object value))
+                    if (v == "null")
+                        subCond |= !data.ContainsKey(gc) || data[gc] == null;
+                    else if (data.TryGetValue(gc, out object value))
                         subCond |= value.Equals(v);
                     else
                         subCond = false;
