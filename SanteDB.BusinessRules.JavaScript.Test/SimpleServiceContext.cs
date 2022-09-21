@@ -133,12 +133,10 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         public void Start()
         {
-            throw new NotImplementedException();
         }
 
         public void Stop()
         {
-            throw new NotImplementedException();
         }
     }
 }

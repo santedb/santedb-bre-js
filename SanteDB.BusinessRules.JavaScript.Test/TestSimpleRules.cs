@@ -48,7 +48,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         [OneTimeSetUp]
         public void ClassInitialize()
         {
-            ApplicationServiceContext.Current = new SimpleServiceContext();
+            ServiceUtil.Start(Guid.Empty, new SimpleServiceContext());
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(TestDataReferenceResolver));
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(SanteDBThreadPool));
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(ConceptRepository));
