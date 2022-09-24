@@ -215,7 +215,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         this.m_engine.Execute(script);
                 }
                 else
-                    this.m_tracer.TraceInfo("Script {0} has already been run", scriptId);
+                    this.m_tracer.TraceWarning("Script {0} has already been run", scriptId);
             }
             catch (JavaScriptException ex)
             {
