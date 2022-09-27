@@ -52,6 +52,8 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         public bool IsRunning => true;
 
+        public String ApplicationName => "Simple";
+
         public OperatingSystemID OperatingSystem => OperatingSystemID.Win32;
 
         public SanteDBHostType HostType => SanteDBHostType.Server;
