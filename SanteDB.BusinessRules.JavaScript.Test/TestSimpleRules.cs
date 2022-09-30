@@ -73,7 +73,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// Ensures that the reference range is set properly
         /// </summary>
         [Test]
-        public void ObservationShouldSetReferenceRange ()
+        public void ObservationShouldSetReferenceRange()
         {
             QuantityObservation qobs = new QuantityObservation()
             {
@@ -129,11 +129,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             Assert.IsFalse(issues.Exists(o => o.Text == "NoGender"));
         }
 
-       
+
         /// <summary>
         /// Test the act returns a complex object
         /// </summary>
-		[Test]
+        [Test]
         public void TestShouldReturnComplexObject()
         {
             Func<String, ExpandoObject> callback = null;

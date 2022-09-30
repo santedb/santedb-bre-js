@@ -69,7 +69,10 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             var threadPool = (IThreadPoolService)ApplicationServiceContext.Current.GetService(typeof(IThreadPoolService));
 
             if (s_syncObject == null)
+            {
                 s_syncObject = new object();
+            }
+
             var tsync = s_syncObject;
 
             Action<Object> workerCallback = (o) =>
@@ -103,7 +106,9 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             };
 
             if (threadPool != null)
+            {
                 threadPool.QueueUserWorkItem(workerCallback, asyncFunc);
+            }
             else
             {
                 workerCallback.BeginInvoke(asyncFunc, null, null);
@@ -117,7 +122,10 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         public Object then(Action<Object> jsCallback)
         {
             if (this.m_asyncResult != null)
+            {
                 jsCallback(this.m_asyncResult);
+            }
+
             this.m_thenCallback = jsCallback;
             return this;
         }
@@ -129,7 +137,10 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         public Object @catch(Action<Object> jsCallback)
         {
             if (this.m_asyncReject != null)
+            {
                 jsCallback(this.m_asyncReject);
+            }
+
             this.m_catchCallback = jsCallback;
             return this;
         }
@@ -142,7 +153,9 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             var unfinished = promises.ToList();
             unfinished.RemoveAll(p => p.m_completed);
             foreach (var t in unfinished)
+            {
                 t.m_completeEvent.Wait();
+            }
         }
     }
 }

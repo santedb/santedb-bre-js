@@ -18,16 +18,15 @@
  * User: fyfej
  * Date: 2022-5-30
  */
+using SanteDB.BusinessRules.JavaScript.Rules;
 using SanteDB.Core;
 using SanteDB.Core.Applets.Services;
 using SanteDB.Core.Diagnostics;
+using SanteDB.Core.Services;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using SanteDB.Core.Services;
-using SanteDB.BusinessRules.JavaScript.Rules;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -54,12 +53,14 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     var collection = solutionManager.GetApplets(s);
                     foreach (var itm in collection.SelectMany(c => c.Assets).Where(a => a.Name.StartsWith("rules/")))
+                    {
                         using (StreamReader sr = new StreamReader(new MemoryStream(collection.RenderAssetContent(itm))))
                         {
                             var script = sr.ReadToEnd();
                             JavascriptExecutorPool.Current.ExecuteGlobal(o => o.ExecuteScript(itm.ToString(), script));
                             this.m_tracer.TraceInfo("Added rules from {0}", itm.Name);
                         }
+                    }
                 }
 
                 //// Instruct the rules engine to load rules

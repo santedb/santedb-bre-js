@@ -19,15 +19,12 @@
  * Date: 2022-5-30
  */
 using SanteDB.Core;
-using SanteDB.Core.Interfaces;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SanteDB.BusinessRules.JavaScript.Test
 {

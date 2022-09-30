@@ -62,7 +62,9 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         public void assert(bool comparison, string message)
         {
             if (!comparison)
+            {
                 throw new ArgumentOutOfRangeException(nameof(comparison), message);
+            }
         }
 
         /// <summary>

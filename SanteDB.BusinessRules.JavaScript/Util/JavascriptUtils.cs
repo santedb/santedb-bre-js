@@ -51,10 +51,17 @@ namespace SanteDB.BusinessRules.JavaScript.Util
             StringBuilder sb = new StringBuilder();
             var dict = data as IDictionary<String, Object>;
             if (dict != null)
+            {
                 foreach (var kv in dict)
+                {
                     sb.AppendFormat("{0}={{{1}}}", kv.Key, ProduceLiteral(kv.Value));
+                }
+            }
             else
+            {
                 sb.Append(data?.ToString() ?? "null");
+            }
+
             return sb.ToString();
         }
 
@@ -77,7 +84,9 @@ namespace SanteDB.BusinessRules.JavaScript.Util
                 {
                     JsonSerializer jsz = new JsonSerializer();
                     using (JsonWriter reader = new JsonTextWriter(new StreamWriter(ms, Encoding.UTF8, 2048, true)))
+                    {
                         jsz.Serialize(reader, data);
+                    }
 
                     // De-serialize
                     ms.Seek(0, SeekOrigin.Begin);
@@ -139,15 +148,21 @@ namespace SanteDB.BusinessRules.JavaScript.Util
                 var retVal = new ExpandoObject();
 
                 if (source == null)
+                {
                     return retVal;
+                }
 
                 var expandoDic = (IDictionary<String, Object>)retVal;
                 foreach (var kv in source)
                 {
                     if (kv.Value is JObject)
+                    {
                         expandoDic.Add(kv.Key, ConvertToJint(kv.Value as JObject));
+                    }
                     else if (kv.Value is JArray)
+                    {
                         expandoDic.Add(kv.Key, (kv.Value as JArray).Select(o => o is JValue ? (o as JValue).Value : ConvertToJint(o as JObject)).ToArray());
+                    }
                     else
                     {
                         object jValue = (kv.Value as JValue).Value;
@@ -157,7 +172,9 @@ namespace SanteDB.BusinessRules.JavaScript.Util
                             expandoDic.Add(kv.Key, new DateTime(Int32.Parse(dValue.Groups[1].Value), Int32.Parse(dValue.Groups[2].Value), Int32.Parse(dValue.Groups[3].Value)));
                         }
                         else
+                        {
                             expandoDic.Add(kv.Key, (kv.Value as JValue).Value);
+                        }
                     }
                 }
                 return retVal;

@@ -18,15 +18,13 @@
  * User: fyfej
  * Date: 2022-5-30
  */
+using SanteDB.Core.Diagnostics;
+using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
-
 using System.Threading;
-using SanteDB.Core.Services;
-using SanteDB.Core.Diagnostics;
 
 namespace SanteDB.BusinessRules.JavaScript.Test
 {
@@ -149,7 +147,9 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         public void QueueUserWorkItem(TimeSpan timeout, Action<Object> callback, Object parm)
         {
             if (timeout == TimeSpan.MinValue)
+            {
                 this.QueueWorkItemInternal(callback, parm, true);
+            }
             else
             {
                 Timer timer = null;
@@ -159,10 +159,14 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                     this.QueueUserWorkItem(kv.Key, kv.Value);
                     timer.Dispose();
                     lock (this.m_timers)
+                    {
                         this.m_timers.Remove(timer);
+                    }
                 }, new KeyValuePair<Action<Object>, Object>(callback, parm), (int)timeout.TotalMilliseconds, Timeout.Infinite);
                 lock (this.m_timers)
+                {
                     this.m_timers.Add(timer);
+                }
             }
         }
 
@@ -216,17 +220,27 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                     State = state,
                     ExecutionContext = ExecutionContext.Capture()
                 };
-                lock (this.m_threadDoneResetEvent) this.m_remainingWorkItems++;
+                lock (this.m_threadDoneResetEvent)
+                {
+                    this.m_remainingWorkItems++;
+                }
+
                 this.EnsureStarted(); // Ensure thread pool threads are started
                 lock (m_queue)
                 {
                     if (!isPriority)
+                    {
                         m_queue.Enqueue(wd);
+                    }
                     else // priority items get inserted at the head so that they are executed first
+                    {
                         this.m_priorityQueue.Enqueue(wd);
+                    }
 
                     if (m_threadWait > 0)
+                    {
                         Monitor.Pulse(m_queue);
+                    }
                 }
             }
             catch (Exception e)
@@ -243,6 +257,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             if (m_threadPool == null)
             {
                 lock (m_queue)
+                {
                     if (m_threadPool == null)
                     {
                         m_threadPool = new Thread[m_concurrencyLevel];
@@ -254,6 +269,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                             m_threadPool[i].Start();
                         }
                     }
+                }
             }
         }
 
@@ -269,19 +285,29 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                 {
                     try
                     {
-                        if (m_disposing) return; // Shutdown requested
+                        if (m_disposing)
+                        {
+                            return; // Shutdown requested
+                        }
+
                         while (m_queue.Count == 0 && m_priorityQueue.Count == 0)
                         {
                             m_threadWait++;
                             try { Monitor.Wait(m_queue); }
                             finally { m_threadWait--; }
                             if (m_disposing)
+                            {
                                 return;
+                            }
                         }
                         if (this.m_priorityQueue.Count > 0)
+                        {
                             wi = this.m_priorityQueue.Dequeue();
+                        }
                         else
+                        {
                             wi = m_queue.Dequeue();
+                        }
                     }
                     catch (Exception e)
                     {
@@ -322,7 +348,10 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                     this.m_remainingWorkItems = 1;
                     this.m_threadDoneResetEvent.Reset();
                 }
-                else this.m_remainingWorkItems++;
+                else
+                {
+                    this.m_remainingWorkItems++;
+                }
             }
             return rv;
         }
@@ -337,7 +366,9 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             try
             {
                 if (worker.Callback != null)
+                {
                     worker.Callback(worker.State);
+                }
             }
             catch (Exception e)
             {
@@ -357,7 +388,10 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             lock (this.m_threadDoneResetEvent)
             {
                 --this.m_remainingWorkItems;
-                if (this.m_remainingWorkItems == 0) this.m_threadDoneResetEvent.Set();
+                if (this.m_remainingWorkItems == 0)
+                {
+                    this.m_threadDoneResetEvent.Set();
+                }
             }
         }
 
@@ -366,7 +400,10 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// </summary>
         private void ThrowIfDisposed()
         {
-            if (this.m_threadDoneResetEvent == null) throw new ObjectDisposedException(this.GetType().Name);
+            if (this.m_threadDoneResetEvent == null)
+            {
+                throw new ObjectDisposedException(this.GetType().Name);
+            }
         }
 
         #region IDisposable Members
@@ -379,20 +416,24 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             if (this.m_threadDoneResetEvent != null)
             {
                 if (this.m_remainingWorkItems > 0)
+                {
                     this.WaitOne();
-
-                ((IDisposable)m_threadDoneResetEvent).Dispose();
+                } ((IDisposable)m_threadDoneResetEvent).Dispose();
                 this.m_threadDoneResetEvent = null;
                 m_disposing = true;
                 lock (m_queue)
+                {
                     Monitor.PulseAll(m_queue);
+                }
 
                 if (m_threadPool != null)
+                {
                     for (int i = 0; i < m_threadPool.Length; i++)
                     {
                         m_threadPool[i].Join();
                         m_threadPool[i] = null;
                     }
+                }
             }
         }
 

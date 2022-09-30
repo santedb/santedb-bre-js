@@ -20,10 +20,8 @@
  */
 using SanteDB.Core;
 using SanteDB.Core.Applets.Services;
-using SanteDB.Core.Interfaces;
 using SanteDB.Core.Services;
 using System;
-using System.ComponentModel;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -88,7 +86,10 @@ namespace SanteDB.BusinessRules.JavaScript
                 this.Starting?.Invoke(this, EventArgs.Empty);
 
                 if (this.m_dataResolver == null)
+                {
                     this.m_serviceManager.AddServiceProvider(typeof(AppletDataReferenceResolver));
+                }
+
                 new AppletBusinessRuleLoader().LoadRules();
                 this.Started?.Invoke(this, EventArgs.Empty);
             };
