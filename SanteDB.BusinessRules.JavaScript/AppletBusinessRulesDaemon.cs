@@ -18,10 +18,16 @@
  * User: fyfej
  * Date: 2022-5-30
  */
+using SanteDB.BusinessRules.JavaScript.Rules;
 using SanteDB.Core;
+using SanteDB.Core.Applets;
 using SanteDB.Core.Applets.Services;
+using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Services;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
@@ -33,6 +39,9 @@ namespace SanteDB.BusinessRules.JavaScript
     {
         private IDataReferenceResolver m_dataResolver;
         private IServiceManager m_serviceManager;
+        private readonly IAppletManagerService m_appletManager;
+        private readonly IAppletSolutionManagerService m_solutionManager;
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(AppletBusinessRulesDaemon));
 
         /// <summary>
         /// Gets the service name
@@ -42,10 +51,12 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Applet business rules daemon
         /// </summary>
-        public AppletBusinessRulesDaemon(IServiceManager serviceManager, IDataReferenceResolver dataResolver = null)
+        public AppletBusinessRulesDaemon(IServiceManager serviceManager, IAppletManagerService appletManager, IDataReferenceResolver dataResolver = null, IAppletSolutionManagerService solutionManagerService = null)
         {
             this.m_dataResolver = dataResolver;
             this.m_serviceManager = serviceManager;
+            this.m_appletManager = appletManager;
+            this.m_solutionManager = solutionManagerService;
         }
 
         /// <summary>
@@ -81,18 +92,56 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public bool Start()
         {
-            ApplicationServiceContext.Current.Started += (o, e) =>
-            {
-                this.Starting?.Invoke(this, EventArgs.Empty);
+            this.Starting?.Invoke(this, EventArgs.Empty);
 
-                if (this.m_dataResolver == null)
+            if (this.m_dataResolver == null)
+            {
+                this.m_serviceManager.AddServiceProvider(typeof(AppletDataReferenceResolver));
+            }
+
+
+            try
+            {
+                List<ReadonlyAppletCollection> appletsToScan = new List<ReadonlyAppletCollection>()
                 {
-                    this.m_serviceManager.AddServiceProvider(typeof(AppletDataReferenceResolver));
+                    this.m_appletManager.Applets
+                };
+                if (this.m_solutionManager != null)
+                {
+                    appletsToScan = appletsToScan.Union(this.m_solutionManager.Solutions.Select(o => this.m_solutionManager.GetApplets(o.Meta.Id))).ToList();
+                }
+                ApplicationServiceContext.Current.AddBusinessRule(typeof(BundleWrapperRule));
+                foreach (var s in appletsToScan)
+                {
+                    foreach (var itm in s.SelectMany(c => c.Assets).Where(a => a.Name.StartsWith("rules/")))
+                    {
+                        using (StreamReader sr = new StreamReader(new MemoryStream(s.RenderAssetContent(itm))))
+                        {
+                            var script = sr.ReadToEnd();
+                            JavascriptExecutorPool.Current.ExecuteGlobal(o => o.ExecuteScript(itm.ToString(), script));
+                            this.m_tracer.TraceInfo("Added rules from {0}", itm.Name);
+                        }
+                    }
                 }
 
-                new AppletBusinessRuleLoader().LoadRules();
-                this.Started?.Invoke(this, EventArgs.Empty);
-            };
+                //// Instruct the rules engine to load rules
+                //SanteDB.BusinessRules.JavaScript.JavascriptBusinessRulesEngine.EngineCreated += (o, e) =>
+                //{
+                //    foreach (var itm in appletManager.Applets.SelectMany(a => a.Assets).Where(a => a.Name.StartsWith("rules/")))
+                //        using (StreamReader sr = new StreamReader(new MemoryStream(appletManager.Applets.RenderAssetContent(itm))))
+                //        {
+                //            e.CreatedEngine.AddRules(itm.Name, sr);
+                //            this.m_tracer.TraceInfo("Added rules from {0}", itm.Name);
+                //        }
+                //};
+            }
+            catch (Exception ex)
+            {
+                this.m_tracer.TraceError("Error on startup: {0}", ex);
+                throw new InvalidOperationException("Could not start business rules engine manager service", ex);
+            }
+
+            this.Started?.Invoke(this, EventArgs.Empty);
 
             return true;
         }
