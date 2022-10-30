@@ -39,6 +39,8 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// </summary>
         private List<Object> m_services = new List<object>();
 
+        public Guid ActivityUuid => Guid.NewGuid();
+
         /// <summary>
         /// CTOR adds itself to provider
         /// </summary>
