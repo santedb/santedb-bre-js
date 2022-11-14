@@ -139,5 +139,10 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         public void Stop()
         {
         }
+
+        public void NotifyStartupProgress(float startupProgress, string startupChangeText)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
