@@ -181,7 +181,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
 
                         foreach (var t in tags)
                         {
-                            t.SourceEntityKey = (modelObj as IIdentifiedData).Key;
+                            t.SourceEntityKey = (modelObj as IAnnotatedResource).Key;
                             tpi.Save(t.SourceEntityKey.Value, t);
                         }
                     }
