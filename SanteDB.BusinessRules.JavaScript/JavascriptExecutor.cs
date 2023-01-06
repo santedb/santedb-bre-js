@@ -160,11 +160,13 @@ namespace SanteDB.BusinessRules.JavaScript
             .DebugMode(debugMode))
                 .SetValue("SanteDBBre", new JavascriptEngineBridge(this))
                 .SetValue("console", new JsConsoleProvider())
+                .SetValue("window", new JsWindowProvider())
                 .SetValue("reflector", new JsObjectProvider());
 
             // Add embedded javascript files into the object
             foreach (var itm in typeof(JavascriptExecutor).Assembly.GetManifestResourceNames().Where(o => o.EndsWith(".js")))
             {
+                this.m_tracer.TraceInfo("Loading built-in JavaScript {0}", itm);
                 using (StreamReader sr = new StreamReader(typeof(JavascriptExecutor).Assembly.GetManifestResourceStream(itm)))
                 {
                     this.ExecuteScript(itm.Replace(typeof(JavascriptExecutor).Assembly.FullName, ""), sr.ReadToEnd());
@@ -225,6 +227,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     this.m_executed.Add(scriptId);
                     lock (this.m_lock) // Lock while executing
                     {
+
                         this.m_engine.Execute(script);
                     }
                 }
