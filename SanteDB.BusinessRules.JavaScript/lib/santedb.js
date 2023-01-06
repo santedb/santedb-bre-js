@@ -21,7 +21,7 @@
 
 // Interactive SHIM between host environment and browser
 var __SanteDBAppService = window.SanteDBAppService || {};
-
+var jQuery = jQuery || undefined;
 // Backing of execution environment
 var ExecutionEnvironment = {
     Unknown: 0,
@@ -4234,7 +4234,7 @@ function SanteDBWrapper() {
     var _magic = null;
 
     // Setup JQuery to send up authentication and cookies!
-    if (SanteDBBre && SanteDBBre.Environment != ExecutionEnvironment.Test) {
+    if (jQuery) {
         $.ajaxSetup({
             cache: false,
             beforeSend: function (data, settings) {
