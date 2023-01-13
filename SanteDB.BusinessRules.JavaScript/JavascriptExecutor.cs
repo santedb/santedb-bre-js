@@ -493,6 +493,10 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     var callList = this.GetCallList(data.GetType(), "Validate").Union(this.GetCallList<TBinding>("Validate"), this.m_javascriptComparer).Distinct();
                     var retVal = new List<DetectedIssue>();
+                    if (!callList.Any())
+                    {
+                        return retVal;
+                    }
                     var vmData = JavascriptUtils.ToViewModel(data);
                     foreach (var c in callList)
                     {
