@@ -108,7 +108,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// </summary>
         public IEnumerable<Type> GetAllTypes()
         {
-            return AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(a => a.ExportedTypes);
+            return AppDomain.CurrentDomain.GetAllTypes();
         }
 
         /// <summary>
