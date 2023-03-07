@@ -16,7 +16,7 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2021-8-27
+ * Date: 2022-5-30
  */
 using SanteDB.Core;
 using SanteDB.Core.Diagnostics;
@@ -28,7 +28,6 @@ using System.Threading;
 
 namespace SanteDB.BusinessRules.JavaScript.JNI
 {
-
     /// <summary>
     /// Javascript promise callback
     /// </summary>
@@ -40,18 +39,22 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
     /// </summary>
     public class JsPromiseProvider
     {
-
         // Synclock object
         [ThreadStatic]
         private static object s_syncObject = new object();
+
         // Tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(JsPromiseProvider));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JsPromiseProvider));
+
         // Then callback
         private Action<Object> m_thenCallback = null;
+
         // Catch callback
         private Action<Object> m_catchCallback = null;
+
         // Async result
         private Object m_asyncResult = null;
+
         private Object m_asyncReject = null;
         private bool m_completed = false;
         private ManualResetEventSlim m_completeEvent = new ManualResetEventSlim(false);
@@ -62,12 +65,14 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public JsPromiseProvider(Action<JsPromiseCallback, JsPromiseCallback> asyncFunc)
         {
-
             this.m_tracer.TraceVerbose("Creating async promise on thread pool");
             var threadPool = (IThreadPoolService)ApplicationServiceContext.Current.GetService(typeof(IThreadPoolService));
 
             if (s_syncObject == null)
+            {
                 s_syncObject = new object();
+            }
+
             var tsync = s_syncObject;
 
             Action<Object> workerCallback = (o) =>
@@ -96,13 +101,14 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     {
                         this.m_tracer.TraceError("Error in Promise: {0}", e);
                         this.m_completeEvent.Set();
-
                     }
                 }
             };
 
             if (threadPool != null)
+            {
                 threadPool.QueueUserWorkItem(workerCallback, asyncFunc);
+            }
             else
             {
                 workerCallback.BeginInvoke(asyncFunc, null, null);
@@ -116,7 +122,10 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         public Object then(Action<Object> jsCallback)
         {
             if (this.m_asyncResult != null)
+            {
                 jsCallback(this.m_asyncResult);
+            }
+
             this.m_thenCallback = jsCallback;
             return this;
         }
@@ -128,7 +137,10 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         public Object @catch(Action<Object> jsCallback)
         {
             if (this.m_asyncReject != null)
+            {
                 jsCallback(this.m_asyncReject);
+            }
+
             this.m_catchCallback = jsCallback;
             return this;
         }
@@ -141,7 +153,9 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             var unfinished = promises.ToList();
             unfinished.RemoveAll(p => p.m_completed);
             foreach (var t in unfinished)
+            {
                 t.m_completeEvent.Wait();
+            }
         }
     }
 }

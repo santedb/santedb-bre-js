@@ -16,7 +16,7 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2021-8-27
+ * Date: 2022-5-30
  */
 using SanteDB.BusinessRules.JavaScript.Util;
 using SanteDB.Core;
@@ -29,6 +29,7 @@ using SanteDB.Core.Model.Serialization;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -46,7 +47,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         private IAdhocCacheService m_adhocCache;
 
         // Diagnostics tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptEngineBridge));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptEngineBridge));
 
         // The engine/executor that owns this
         private JavascriptExecutor m_owner;
@@ -69,9 +70,13 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         public void Break()
         {
             if (System.Diagnostics.Debugger.IsAttached)
+            {
                 System.Diagnostics.Debugger.Break();
+            }
             else
+            {
                 new JsConsoleProvider().warn("Break was requested however no debugger is attached.");
+            }
         }
 
         /// <summary>
@@ -87,12 +92,19 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 {
                     List<String> vals = null;
                     if (kv.Value is object[])
+                    {
                         vals = (kv.Value as object[]).Select(o => o.ToString()).ToList();
+                    }
                     else if (kv.Value is string[])
+                    {
                         vals = (kv.Value as string[]).ToList();
+                    }
                     else
+                    {
                         vals = new List<String>() { kv.Value.ToString() };
-                    guardExpr.Add(kv.Key, vals);
+                    }
+
+                    vals.ForEach(o => guardExpr.Add(kv.Key, o));
                 }
             }
             this.m_owner.RegisterCallback(id, target, trigger, guardExpr, _delegate);
@@ -163,10 +175,13 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                     {
                         var tpi = ApplicationServiceContext.Current.GetService(typeof(ITagPersistenceService)) as ITagPersistenceService;
                         if (tpi == null)
+                        {
                             return obj;
+                        }
+
                         foreach (var t in tags)
                         {
-                            t.SourceEntityKey = (modelObj as IIdentifiedEntity).Key;
+                            t.SourceEntityKey = (modelObj as IAnnotatedResource).Key;
                             tpi.Save(t.SourceEntityKey.Value, t);
                         }
                     }
@@ -187,14 +202,18 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         {
             Type dataType = this.m_binder.BindToType(null, type);
             if (dataType == null)
+            {
                 throw new InvalidOperationException($"Cannot find type information for {type}");
+            }
 
             var idpInstance = ApplicationServiceContext.Current.GetService(typeof(IDataCachingService)) as IDataCachingService;
             if (idpInstance == null)
+            {
                 throw new KeyNotFoundException($"The data caching service for {type} was not found");
+            }
+
             idpInstance.Remove(Guid.Parse(key));
         }
-
 
         /// <summary>
         /// Execute bundle rules
@@ -239,17 +258,20 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             }
         }
 
-
         /// <summary>
         /// Get service by name
         /// </summary>
         public object GetService(String serviceName)
         {
-            var serviceType = typeof(IRepositoryService<>).Assembly.ExportedTypes.FirstOrDefault(o => o.Name == serviceName && o.IsInterface);
+            var serviceType = AppDomain.CurrentDomain.GetAllTypes().FirstOrDefault(o => o.Name == serviceName && o.IsInterface);
             if (serviceType == null)
+            {
                 return null;
+            }
             else
+            {
                 return ApplicationServiceContext.Current.GetService(serviceType);
+            }
         }
 
         /// <summary>
@@ -268,7 +290,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             return Guid.Parse(guid);
         }
 
-
         /// <summary>
         /// Get data asset
         /// </summary>
@@ -285,7 +306,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// <summary>
         /// Gets the specified data from the underlying data-store
         /// </summary>
-        public object Obsolete(String type, Guid id)
+        public object Delete(String type, Guid id)
         {
             try
             {
@@ -294,9 +315,11 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 var idp = typeof(IRepositoryService<>).MakeGenericType(dataType);
                 var idpInstance = ApplicationServiceContext.Current.GetService(idp) as IRepositoryService;
                 if (idpInstance == null)
+                {
                     throw new KeyNotFoundException($"The repository service for {type} was not found. Ensure an IRepositoryService<{type}> is registered");
+                }
 
-                return JavascriptUtils.ToViewModel(idpInstance.Obsolete(id));
+                return JavascriptUtils.ToViewModel(idpInstance.Delete(id));
             }
             catch (Exception e)
             {
@@ -320,13 +343,16 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 {
                     Type dataType = this.m_binder.BindToType(null, type);
                     if (dataType == null)
+                    {
                         throw new InvalidOperationException($"Cannot find type information for {type}");
+                    }
 
                     var idp = typeof(IRepositoryService<>).MakeGenericType(dataType);
                     var idpInstance = ApplicationServiceContext.Current.GetService(idp) as IRepositoryService;
                     if (idpInstance == null)
+                    {
                         throw new KeyNotFoundException($"The repository service for {type} was not found. Ensure an IRepositoryService<{type}> is registered");
-
+                    }
 
                     retVal = JavascriptUtils.ToViewModel(idpInstance.Get(guidId));
                     this.m_adhocCache?.Add(cacheKey, retVal, new TimeSpan(0, 0, 30));
@@ -345,7 +371,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public object Find(String type, ExpandoObject query)
         {
-            var queryStr = new NameValueCollection((query as IDictionary<String, object>).ToArray()).ToString();
+            var queryStr = query.ToNameValueCollection().ToHttpString();
             return Find(type, queryStr);
         }
 
@@ -354,7 +380,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public void AddCache(ExpandoObject key, ExpandoObject data)
         {
-            var queryStr = new NameValueCollection((key as IDictionary<String, object>).ToArray()).ToString();
+            var queryStr = data.ToNameValueCollection().ToHttpString();
             AddCache(queryStr, data);
         }
 
@@ -371,7 +397,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// </summary>
         public object GetCache(ExpandoObject key)
         {
-            var queryStr = new NameValueCollection((key as IDictionary<String, object>).ToArray()).ToString();
+            var queryStr = key.ToNameValueCollection().ToHttpString();
             return GetCache(queryStr);
         }
 
@@ -384,7 +410,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         }
 
         /// <summary>
-        /// Finds the specified data 
+        /// Finds the specified data
         /// </summary>
         public object Find(String type, String query)
         {
@@ -392,14 +418,18 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             {
                 Type dataType = this.m_binder.BindToType(null, type);
                 if (dataType == null)
+                {
                     throw new InvalidOperationException($"Cannot find type information for {type}");
+                }
 
                 var idp = typeof(IRepositoryService<>).MakeGenericType(dataType);
                 var idpInstance = ApplicationServiceContext.Current.GetService(idp) as IRepositoryService;
                 if (idpInstance == null)
+                {
                     throw new KeyNotFoundException($"The repository service for {type} was not found. Ensure an IRepositoryService<{type}> is registered");
+                }
 
-                var expr = QueryExpressionParser.BuildLinqExpression(dataType, NameValueCollection.ParseQueryString(query));
+                var expr = QueryExpressionParser.BuildLinqExpression(dataType, query.ParseQueryString());
                 var results = idpInstance.Find(expr).OfType<IdentifiedData>();
                 return JavascriptUtils.ToViewModel(new Bundle()
                 {
@@ -430,12 +460,17 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 var cacheKey = $"{data.Type}.{data.Key}";
                 this.m_adhocCache?.Remove(cacheKey);
 
-                if (data == null) throw new ArgumentException("Could not parse value for save");
+                if (data == null)
+                {
+                    throw new ArgumentException("Could not parse value for save");
+                }
 
                 var idp = typeof(IRepositoryService<>).MakeGenericType(data.GetType());
                 var idpInstance = ApplicationServiceContext.Current.GetService(idp) as IRepositoryService;
                 if (idpInstance == null)
+                {
                     throw new KeyNotFoundException($"The repository service for {data.GetType()} was not found. Ensure an IRepositoryService<{data.GetType()}> is registered");
+                }
 
                 return JavascriptUtils.ToViewModel(idpInstance.Save(data));
             }
@@ -459,7 +494,10 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             try
             {
                 var data = JavascriptUtils.ToModel(value);
-                if (data == null) throw new ArgumentException("Could not parse value for insert");
+                if (data == null)
+                {
+                    throw new ArgumentException("Could not parse value for insert");
+                }
 
                 var cacheKey = $"{data.Type}.{data.Key}";
                 this.m_adhocCache?.Remove(cacheKey);
@@ -467,7 +505,9 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 var idp = typeof(IRepositoryService<>).MakeGenericType(data.GetType());
                 var idpInstance = ApplicationServiceContext.Current.GetService(idp) as IRepositoryService;
                 if (idpInstance == null)
+                {
                     throw new KeyNotFoundException($"The repository service for {data.GetType()} was not found. Ensure an IRepositoryService<{data.GetType()}> is registered");
+                }
 
                 return JavascriptUtils.ToViewModel(idpInstance.Insert(data));
             }
@@ -481,7 +521,6 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
                 this.m_tracer.TraceError("Error inserting in  BRE: {0} - {1}", value, e);
                 throw new Exception($"Error inserting in  BRE: {value}", e);
             }
-
         }
     }
 }

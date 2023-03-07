@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2021 - 2021, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
+ * Copyright (C) 2021 - 2022, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
  * Copyright (C) 2019 - 2021, Fyfe Software Inc. and the SanteSuite Contributors
  * Portions Copyright (C) 2015-2018 Mohawk College of Applied Arts and Technology
  * 
@@ -16,7 +16,7 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2021-8-5
+ * Date: 2022-5-30
  */
 using Jint;
 using NUnit.Framework;
@@ -48,7 +48,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         [OneTimeSetUp]
         public void ClassInitialize()
         {
-            ApplicationServiceContext.Current = new SimpleServiceContext();
+            ServiceUtil.Start(Guid.Empty, new SimpleServiceContext());
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(TestDataReferenceResolver));
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(SanteDBThreadPool));
             (ApplicationServiceContext.Current as IServiceManager).AddServiceProvider(typeof(ConceptRepository));
@@ -73,7 +73,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// Ensures that the reference range is set properly
         /// </summary>
         [Test]
-        public void ObservationShouldSetReferenceRange ()
+        public void ObservationShouldSetReferenceRange()
         {
             QuantityObservation qobs = new QuantityObservation()
             {
@@ -129,11 +129,11 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             Assert.IsFalse(issues.Exists(o => o.Text == "NoGender"));
         }
 
-       
+
         /// <summary>
         /// Test the act returns a complex object
         /// </summary>
-		[Test]
+        [Test]
         public void TestShouldReturnComplexObject()
         {
             Func<String, ExpandoObject> callback = null;
@@ -185,7 +185,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
                 {
                     new ActParticipation()
                     {
-                        ParticipationRole = new Core.Model.DataTypes.Concept() { Mnemonic = "RecordTarget", Key = ActParticipationKey.RecordTarget },
+                        ParticipationRole = new Core.Model.DataTypes.Concept() { Mnemonic = "RecordTarget", Key = ActParticipationKeys.RecordTarget },
                         Act = new QuantityObservation()
                         {
                             Value = (decimal)1.2,

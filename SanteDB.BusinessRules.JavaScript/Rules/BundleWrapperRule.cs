@@ -16,16 +16,13 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2022-1-11
+ * Date: 2022-5-30
  */
 using SanteDB.BusinessRules.JavaScript.JNI;
 using SanteDB.Core;
 using SanteDB.Core.Model.Collection;
 using SanteDB.Core.Services;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace SanteDB.BusinessRules.JavaScript.Rules
 {
@@ -58,7 +55,10 @@ namespace SanteDB.BusinessRules.JavaScript.Rules
                    while (bres != null)
                    {
                        if (jreType.IsAssignableFrom(bres.GetType()))
+                       {
                            return true;
+                       }
+
                        bres = bres.Next;
                    }
                    return false;

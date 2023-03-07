@@ -16,7 +16,7 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2021-8-27
+ * Date: 2022-5-30
  */
 using Jint.Runtime;
 using SanteDB.BusinessRules.JavaScript.Exceptions;
@@ -33,6 +33,7 @@ using SanteDB.Core.Security;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -137,7 +138,7 @@ namespace SanteDB.BusinessRules.JavaScript
         private Jint.Engine m_engine;
 
         // Tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptExecutor));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptExecutor));
 
         /// <summary>
         /// Gets the current engine
@@ -159,12 +160,18 @@ namespace SanteDB.BusinessRules.JavaScript
             .DebugMode(debugMode))
                 .SetValue("SanteDBBre", new JavascriptEngineBridge(this))
                 .SetValue("console", new JsConsoleProvider())
+                .SetValue("window", new JsWindowProvider())
                 .SetValue("reflector", new JsObjectProvider());
 
             // Add embedded javascript files into the object
             foreach (var itm in typeof(JavascriptExecutor).Assembly.GetManifestResourceNames().Where(o => o.EndsWith(".js")))
+            {
+                this.m_tracer.TraceInfo("Loading built-in JavaScript {0}", itm);
                 using (StreamReader sr = new StreamReader(typeof(JavascriptExecutor).Assembly.GetManifestResourceStream(itm)))
+                {
                     this.ExecuteScript(itm.Replace(typeof(JavascriptExecutor).Assembly.FullName, ""), sr.ReadToEnd());
+                }
+            }
         }
 
         /// <summary>
@@ -173,7 +180,9 @@ namespace SanteDB.BusinessRules.JavaScript
         public void AddExposedObject(String identifier, Object jniObject)
         {
             lock (this.m_lock)
+            {
                 this.m_engine.SetValue(identifier, jniObject);
+            }
         }
 
         /// <summary>
@@ -196,25 +205,36 @@ namespace SanteDB.BusinessRules.JavaScript
                         var include = match.Groups[1].Value;
                         var incStream = (ApplicationServiceContext.Current.GetService(typeof(IDataReferenceResolver)) as IDataReferenceResolver)?.Resolve(include);
                         if (incStream == null)
+                        {
                             this.m_tracer.TraceWarning("Include {0} not found", include);
+                        }
                         else
+                        {
                             try
                             {
                                 using (StreamReader sr = new StreamReader(incStream))
+                                {
                                     this.m_engine.Execute(sr.ReadToEnd());
+                                }
                             }
                             catch (Exception e)
                             {
                                 this.m_tracer.TraceWarning("Will skip {0} due to {1}", include, e.Message);
                             }
+                        }
                     }
 
                     this.m_executed.Add(scriptId);
                     lock (this.m_lock) // Lock while executing
+                    {
+
                         this.m_engine.Execute(script);
+                    }
                 }
                 else
-                    this.m_tracer.TraceInfo("Script {0} has already been run", scriptId);
+                {
+                    this.m_tracer.TraceWarning("Script {0} has already been run", scriptId);
+                }
             }
             catch (JavaScriptException ex)
             {
@@ -230,7 +250,10 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             var type = this.m_binder.BindToType(null, targetResource);
             if (type == null)
+            {
                 throw new InvalidOperationException($"Could not find resource type registration {targetResource}");
+            }
+
             this.RegisterCallback(id, type, trigger, guard, _delegate);
         }
 
@@ -249,12 +272,16 @@ namespace SanteDB.BusinessRules.JavaScript
                 }
 
                 if (callbacks.Any(o => o.Id == id && o.TriggerName == trigger))
+                {
                     this.m_tracer.TraceWarning("{0} rule {1} has already been registered with this engine", trigger, id);
+                }
                 else
                 {
                     // Register a BRE hook
                     if (!this.IsRegistered(targetType))
+                    {
                         ApplicationServiceContext.Current.AddBusinessRule(typeof(JavascriptBusinessRule<>).MakeGenericType(targetType));
+                    }
 
                     callbacks.Add(new JavascriptCallbackInfo(id, trigger, guard, _delegate));
                 }
@@ -271,7 +298,10 @@ namespace SanteDB.BusinessRules.JavaScript
             while (bre != null)
             {
                 if (jreType.IsAssignableFrom(bre.GetType()))
+                {
                     return true; // already registered
+                }
+
                 bre = bre.Next;
             }
             return false;
@@ -292,9 +322,13 @@ namespace SanteDB.BusinessRules.JavaScript
         private IEnumerable<JavascriptCallbackInfo> GetCallList(Type tBinding, String trigger)
         {
             if (this.m_registeredCallback.TryGetValue(tBinding, out List<JavascriptCallbackInfo> retVal))
+            {
                 return retVal.Where(o => o.TriggerName == trigger);
+            }
             else
+            {
                 return new JavascriptCallbackInfo[0];
+            }
         }
 
         /// <summary>
@@ -306,21 +340,33 @@ namespace SanteDB.BusinessRules.JavaScript
         private bool GuardEval(NameValueCollection guard, IDictionary<String, Object> data)
         {
             var retVal = true;
-            foreach (var gc in guard)
+            foreach (var gc in guard.AllKeys)
             {
-                if (gc.Key.Contains(".") || gc.Key.Contains("["))
-                    throw new InvalidOperationException("Rule guards can only be simple property paths");
-                if (gc.Key.StartsWith("_"))
-                    continue; // ignore control parms
-                bool subCond = false;
-                foreach (var v in gc.Value)
+                if (gc.Contains(".") || gc.Contains("["))
                 {
-                    if (gc.Value.First() == "null")
-                        subCond |= !data.ContainsKey(gc.Key) || data[gc.Key] == null;
-                    else if (data.TryGetValue(gc.Key, out object value))
+                    throw new InvalidOperationException("Rule guards can only be simple property paths");
+                }
+
+                if (gc.StartsWith("_"))
+                {
+                    continue; // ignore control parms
+                }
+
+                bool subCond = false;
+                foreach (var v in guard.GetValues(gc))
+                {
+                    if (v == "null")
+                    {
+                        subCond |= !data.ContainsKey(gc) || data[gc] == null;
+                    }
+                    else if (data.TryGetValue(gc, out object value))
+                    {
                         subCond |= value.Equals(v);
+                    }
                     else
+                    {
                         subCond = false;
+                    }
                 }
                 retVal &= subCond;
             }
@@ -335,7 +381,11 @@ namespace SanteDB.BusinessRules.JavaScript
             lock (this.m_lock) // Only one object can use this thread at a time
             {
                 var sdata = data as IDictionary<String, Object>;
-                if (sdata == null || !sdata.ContainsKey("$type")) return data;
+                if (sdata == null || !sdata.ContainsKey("$type"))
+                {
+                    return data;
+                }
+
                 var callList = this.GetCallList(this.m_binder.BindToType("SanteDB.Core.Model, Version=1.1.0.0", sdata["$type"].ToString()), triggerName);
                 var retVal = data;
 
@@ -346,7 +396,9 @@ namespace SanteDB.BusinessRules.JavaScript
                         try
                         {
                             if (c.Guard == null || this.GuardEval(c.Guard, sdata))
+                            {
                                 data = c.Callback.DynamicInvoke(data);
+                            }
                         }
                         catch (JavaScriptException e)
                         {
@@ -381,7 +433,10 @@ namespace SanteDB.BusinessRules.JavaScript
             {
                 using (AuthenticationContext.EnterSystemContext())
                 {
-                    if (data == default(TBinding)) return data;
+                    if (data == default(TBinding))
+                    {
+                        return data;
+                    }
 
                     var callList = this.GetCallList(data.GetType(), triggerName);
                     callList = callList.Union(this.GetCallList<TBinding>(triggerName), this.m_javascriptComparer).ToList();
@@ -438,6 +493,10 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     var callList = this.GetCallList(data.GetType(), "Validate").Union(this.GetCallList<TBinding>("Validate"), this.m_javascriptComparer).Distinct();
                     var retVal = new List<DetectedIssue>();
+                    if (!callList.Any())
+                    {
+                        return retVal;
+                    }
                     var vmData = JavascriptUtils.ToViewModel(data);
                     foreach (var c in callList)
                     {

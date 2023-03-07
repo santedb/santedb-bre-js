@@ -16,13 +16,14 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2021-8-27
+ * Date: 2022-5-30
  */
 using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Entities;
+using SanteDB.Core.Model.Query;
 using SanteDB.Core.Services;
 using System;
 using System.Collections.Generic;
@@ -30,8 +31,6 @@ using System.Linq;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
-
-
     /// <summary>
     /// Wrapper for <see cref="IBusinessRulesService"/> which calls one or more JavaScript functions
     /// </summary>
@@ -44,9 +43,8 @@ namespace SanteDB.BusinessRules.JavaScript
     /// </remarks>
     internal class JavascriptBusinessRule<TBinding> : IBusinessRulesService<TBinding> where TBinding : IdentifiedData
     {
-
         // Tracer
-        private Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRule<TBinding>));
+        private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRule<TBinding>));
 
         /// <summary>
         /// Gets the service name
@@ -84,9 +82,13 @@ namespace SanteDB.BusinessRules.JavaScript
                 // TODO: Refactor this to the DetectedIssue extension
                 this.m_tracer.TraceWarning("Error running {0} on {1} - The business rule has been ignored - {2}", triggerName, data, e);
                 if (data is Entity entity)
-                    entity.Tags.Add(new Core.Model.DataTypes.EntityTag("$bre.error", e.Message));
+                {
+                    entity.AddTag("$bre.error", e.Message);
+                }
                 else if (data is Act act)
-                    act.Tags.Add(new Core.Model.DataTypes.ActTag("$bre.error", e.Message));
+                {
+                    act.AddTag("$bre.error", e.Message);
+                }
                 return data;
             }
         }
@@ -103,26 +105,23 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// After obsoletion
         /// </summary>
-        public TBinding AfterObsolete(TBinding data)
+        public TBinding AfterDelete(TBinding data)
         {
             var retVal = this.InvokeTrigger("AfterObsolete", data);
-            return this.Next?.AfterObsolete(retVal) ?? retVal;
+            return this.Next?.AfterDelete(retVal) ?? retVal;
         }
 
         /// <summary>
         /// After query is complete
         /// </summary>
-        public IEnumerable<TBinding> AfterQuery(IEnumerable<TBinding> results)
+        public IQueryResultSet<TBinding> AfterQuery(IQueryResultSet<TBinding> results)
         {
-            // Invoke the business rule
-            if (results.Any())
+            IQueryResultSet<TBinding> resultSet = new NestedQueryResultSet<TBinding>(results, (o) => (TBinding)JavascriptExecutorPool.Current.Execute((e, i) => e.Invoke("AfterQuery", i), o));
+            if (this.Next != null)
             {
-                var retVal = results.Select(o => JavascriptExecutorPool.Current.Execute((e, i) => e.Invoke("AfterQuery", i), o)).OfType<TBinding>();
-                return this.Next?.AfterQuery(retVal) ?? retVal;
+                resultSet = resultSet.Union(this.Next.AfterQuery(results));
             }
-            else
-                return this.Next?.AfterQuery(results) ?? results;
-
+            return results;
         }
 
         /// <summary>
@@ -155,10 +154,10 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Before an obsoletion
         /// </summary>
-        public TBinding BeforeObsolete(TBinding data)
+        public TBinding BeforeDelete(TBinding data)
         {
             var retVal = this.InvokeTrigger("BeforeObsolete", data);
-            return this.Next?.BeforeObsolete(retVal) ?? retVal;
+            return this.Next?.BeforeDelete(retVal) ?? retVal;
         }
 
         /// <summary>
@@ -192,17 +191,20 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public object AfterObsolete(object data)
         {
-            return this.AfterObsolete((TBinding)data);
-
+            return this.AfterDelete((TBinding)data);
         }
 
         /// <summary>
         /// After query occurs
         /// </summary>
-        public IEnumerable<object> AfterQuery(IEnumerable<object> results)
+        public IQueryResultSet AfterQuery(IQueryResultSet results)
         {
-            return this.AfterQuery(results.OfType<TBinding>()).OfType<object>();
-
+            IQueryResultSet resultSet = new NestedQueryResultSet(results, (o) => JavascriptExecutorPool.Current.Execute<TBinding>((e, i) => e.Invoke("AfterQuery", (TBinding)i), (TBinding)o));
+            if (this.Next != null)
+            {
+                resultSet = resultSet.Union(this.Next.AfterQuery(results));
+            }
+            return results;
         }
 
         /// <summary>
@@ -219,7 +221,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object AfterUpdate(object data)
         {
             return this.AfterUpdate((TBinding)data);
-
         }
 
         /// <summary>
@@ -228,7 +229,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object BeforeInsert(object data)
         {
             return this.BeforeInsert((TBinding)data);
-
         }
 
         /// <summary>
@@ -236,8 +236,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public object BeforeObsolete(object data)
         {
-            return this.BeforeObsolete((TBinding)data);
-
+            return this.BeforeDelete((TBinding)data);
         }
 
         /// <summary>
@@ -246,7 +245,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public object BeforeUpdate(object data)
         {
             return this.BeforeUpdate((TBinding)data);
-
         }
 
         /// <summary>

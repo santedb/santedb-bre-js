@@ -1,6 +1,6 @@
 ﻿/// <reference path="~/.ref/js/openiz-bre.js"/>
 /*
- * Copyright (C) 2021 - 2021, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
+ * Copyright (C) 2021 - 2022, SanteSuite Inc. and the SanteSuite Contributors (See NOTICE.md for full copyright notices)
  * Copyright (C) 2019 - 2021, Fyfe Software Inc. and the SanteSuite Contributors
  * Portions Copyright (C) 2015-2018 Mohawk College of Applied Arts and Technology
  * 
@@ -17,20 +17,19 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2021-8-5
+ * Date: 2022-5-30
  */
 
 /// <reference path="~/.ref/js/openiz-model.js"/>
 
-SanteDBBre.AddBusinessRule("QuantityObservation", "BeforeInsert", {},
+SanteDBBre.AddBusinessRule("QuantityObservation", "BeforeInsert", { typeConcept: 'a261f8cd-69b0-49aa-91f4-e6d3e5c612ed' },
     /** 
      * @param {OpenIZModel.QuantityObservation} observation
      */
     function (observation) {
 
         var simplifiedObservation = observation;
-        if (simplifiedObservation.$type != "QuantityObservation" ||
-            simplifiedObservation.typeConcept != 'a261f8cd-69b0-49aa-91f4-e6d3e5c612ed')
+        if (simplifiedObservation.$type != "QuantityObservation")
             return observation;
 
         // We need to suggest ... yay! This is the fun part

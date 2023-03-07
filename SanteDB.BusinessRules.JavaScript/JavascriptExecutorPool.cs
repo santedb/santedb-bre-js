@@ -16,7 +16,7 @@
  * the License.
  * 
  * User: fyfej
- * Date: 2021-8-27
+ * Date: 2022-5-30
  */
 using SanteDB.BusinessRules.JavaScript.Configuration;
 using SanteDB.Core;
@@ -66,7 +66,10 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     this.m_resetEvent.Wait();
                     if (this.m_freeExecutors == null)
+                    {
                         throw new ObjectDisposedException("This worker pool has been disposed");
+                    }
+
                     this.m_resetEvent.Reset();
                 }
             }
@@ -92,7 +95,9 @@ namespace SanteDB.BusinessRules.JavaScript
         public void ExecuteGlobal(Action<JavascriptExecutor> exec)
         {
             foreach (var itm in this.m_executors)
+            {
                 exec(itm);
+            }
         }
 
         /// <summary>
@@ -103,7 +108,10 @@ namespace SanteDB.BusinessRules.JavaScript
             // Don't allow anyone to execute
             this.m_freeExecutors.Clear();
             foreach (var i in this.m_executors)
+            {
                 i.Dispose();
+            }
+
             this.m_executors = null;
             this.m_freeExecutors = null;
 
@@ -118,7 +126,7 @@ namespace SanteDB.BusinessRules.JavaScript
         private JavascriptExecutorPool()
         {
             var configuration = ApplicationServiceContext.Current.GetService<IConfigurationManager>()?.GetSection<JavascriptRulesConfigurationSection>();
-            var concurrency = configuration?.WorkerInstances ?? Environment.ProcessorCount * 4;
+            var concurrency = configuration?.WorkerInstances ?? (Environment.ProcessorCount / 2) + 1;
             this.m_executors = new JavascriptExecutor[concurrency];
             for (int i = 0; i < concurrency; i++)
             {
