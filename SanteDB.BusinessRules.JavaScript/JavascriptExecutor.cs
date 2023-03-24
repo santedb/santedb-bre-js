@@ -18,6 +18,7 @@
  * User: fyfej
  * Date: 2023-3-10
  */
+using Jint;
 using Jint.Runtime;
 using SanteDB.BusinessRules.JavaScript.Exceptions;
 using SanteDB.BusinessRules.JavaScript.JNI;
@@ -238,7 +239,7 @@ namespace SanteDB.BusinessRules.JavaScript
             }
             catch (JavaScriptException ex)
             {
-                this.m_tracer.TraceError("Error executing JavaScript {0}:{1} > {2}", ex.LineNumber, ex.Column, ex);
+                this.m_tracer.TraceError("Error executing JavaScript {0}:{1} > {2}", ex.Location.Start.Line, ex.Location.Start.Column, ex);
                 throw ex;
             }
         }
@@ -402,7 +403,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         }
                         catch (JavaScriptException e)
                         {
-                            this.m_tracer.TraceError("JAVASCRIPT ERROR RUNNING {0} OBJECT :::::> {3}@{2}\r\n{1}", triggerName, JavascriptUtils.ProduceLiteral(data), e.LineNumber, e);
+                            this.m_tracer.TraceError("JAVASCRIPT ERROR RUNNING {0} OBJECT :::::> {3}@{2}\r\n{1}", triggerName, JavascriptUtils.ProduceLiteral(data), e.Location.Start.Line, e);
                             throw new DetectedIssueException(new List<DetectedIssue>()
                             {
                                 new DetectedIssue()
@@ -458,13 +459,13 @@ namespace SanteDB.BusinessRules.JavaScript
                             catch (JavaScriptException e)
                             {
                                 this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
-                                    triggerName, data, e.Location.Source, e.LineNumber, e.CallStack, e);
+                                    triggerName, data, e.Location.Source, e.Location.Start.Line, e.JavaScriptStackTrace, e);
                                 throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
                             }
                             catch (TargetInvocationException e) when (e.InnerException is JavaScriptException je)
                             {
                                 this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
-                                    triggerName, data, je.Location.Source, je.LineNumber, je.CallStack, e);
+                                    triggerName, data, je.Location.Source, je.Location.Start.Line, je.JavaScriptStackTrace, e);
                                 throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", je);
                             }
                             catch (Exception e)
@@ -519,7 +520,7 @@ namespace SanteDB.BusinessRules.JavaScript
                                 new DetectedIssue()
                                 {
                                     Priority = DetectedIssuePriorityType.Error,
-                                    Text = $"Error validating {data} (rule: {c.Id}) - {e.Message} @ {e.LineNumber}"
+                                    Text = $"Error validating {data} (rule: {c.Id}) - {e.Message} @ {e.Location.Start.Line}"
                                 }
                             };
                         }
@@ -546,7 +547,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public void Dispose()
         {
-            this.m_engine.BreakPoints.Clear();
+            this.m_engine.DebugHandler.BreakPoints.Clear();
             this.m_registeredCallback.Clear();
             this.m_registeredCallback = null;
             this.m_engine = null;
