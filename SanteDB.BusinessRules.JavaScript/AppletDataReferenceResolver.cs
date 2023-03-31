@@ -25,6 +25,10 @@ using System.Linq;
 
 namespace SanteDB.BusinessRules.JavaScript
 {
+    /// <summary>
+    /// Represents a <see cref="IDataReferenceResolver"/> which resolves data assets from the 
+    /// installed applets in the SanteDB <see cref="IAppletManagerService"/>
+    /// </summary>
     public class AppletDataReferenceResolver : IDataReferenceResolver
     {
         /// <summary>

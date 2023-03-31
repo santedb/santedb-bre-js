@@ -30,14 +30,27 @@ namespace SanteDB.BusinessRules.JavaScript.Exceptions
     public class JsBusinessRuleException : Exception
     {
 
+        /// <summary>
+        /// Creates a new javascript business rules engine exception
+        /// </summary>
         public JsBusinessRuleException()
         {
         }
 
+        /// <summary>
+        /// Creates a new javascript business rules engine exception with the specified <paramref name="message"/>
+        /// </summary>
+        /// <param name="message">The error message to be conveyed in the exception</param>
         public JsBusinessRuleException(string message) : base(message)
         {
         }
 
+        /// <summary>
+        /// Create a new javascript business rules engine exception with the specified <paramref name="message"/>
+        /// caused by the <paramref name="innerException"/>
+        /// </summary>
+        /// <param name="message">The error message to be conveyed in the exception</param>
+        /// <param name="innerException">The cause of the exception</param>
         public JsBusinessRuleException(string message, Exception innerException) : base(message, innerException)
         {
         }

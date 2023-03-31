@@ -62,13 +62,19 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// </summary>
         public DateTime StartTime { get; private set; }
 
+#pragma warning disable CS0067
+        /// <inheritdoc/>
         public event EventHandler Starting;
 
+        /// <inheritdoc/>
         public event EventHandler Started;
 
+        /// <inheritdoc/>
         public event EventHandler Stopping;
 
+        /// <inheritdoc/>
         public event EventHandler Stopped;
+#pragma warning restore 
 
         /// <summary>
         /// Add a service provider class
