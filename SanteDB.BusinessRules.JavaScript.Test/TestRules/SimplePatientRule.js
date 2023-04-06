@@ -30,9 +30,11 @@ SanteDBBre.AddBusinessRule("Patient", "AfterInsert", {}, function (patient) {
     console.assert(simplePatient.genderConceptModel != null, "Gender is null");
     console.assert(simplePatient.genderConceptModel.mnemonic == "Female", "Expected Female");
     console.assert(simplePatient.participation != null, "Participation missing");
+    console.assert(simplePatient.participation.RecordTarget != null, "Record Target missing");
     console.assert(simplePatient.participation.RecordTarget[0] != null, "Record Target missing");
     console.assert(simplePatient.name != null, "Names null");
     console.assert(simplePatient.name.Legal != null, "Names missing Legal");
+    console.assert(Array.isArray(simplePatient.name.Legal), "Names is not array");
     console.assert(simplePatient.name.Legal[0].component != null, "Name missing components");
     console.assert(simplePatient.name.Legal[0].component.Given[0] == "James", "Expected James as given name");
     console.assert(simplePatient.name.Legal[0].component.Family[0] == "Smith", "Expected Smith as family");
