@@ -18,8 +18,10 @@
  * User: fyfej
  * Date: 2023-3-10
  */
+using SanteDB.BusinessRules.JavaScript.Exceptions;
 using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Diagnostics;
+using SanteDB.Core.i18n;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Entities;
@@ -89,7 +91,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     act.AddTag("$bre.error", e.Message);
                 }
-                return data;
+                throw new JsBusinessRuleException(String.Format(ErrorMessages.JS_BUSINESS_RULE_ERROR, triggerName), e);
             }
         }
 
