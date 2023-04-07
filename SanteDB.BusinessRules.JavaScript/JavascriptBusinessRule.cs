@@ -91,7 +91,7 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     act.AddTag("$bre.error", e.Message);
                 }
-                throw new JsBusinessRuleException(ErrorMessages.JS_BUSINESS_RULE_ERROR, e);
+                throw new JsBusinessRuleException(String.Format(ErrorMessages.JS_BUSINESS_RULE_ERROR, triggerName), e);
             }
         }
 
