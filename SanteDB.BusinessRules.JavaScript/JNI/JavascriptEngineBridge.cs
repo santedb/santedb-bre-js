@@ -64,21 +64,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             this.m_adhocCache = ApplicationServiceContext.Current.GetService<IAdhocCacheService>();
         }
 
-        /// <summary>
-        /// Break current execution
-        /// </summary>
-        public void Break()
-        {
-            if (System.Diagnostics.Debugger.IsAttached)
-            {
-                System.Diagnostics.Debugger.Break();
-            }
-            else
-            {
-                new JsConsoleProvider().warn("Break was requested however no debugger is attached.");
-            }
-        }
-
+        
         /// <summary>
         /// Add a business rule for the specified object
         /// </summary>
