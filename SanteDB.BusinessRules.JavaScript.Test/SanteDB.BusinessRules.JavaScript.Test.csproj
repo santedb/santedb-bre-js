@@ -19,16 +19,10 @@
     <When Condition="$(SolutionName.Contains('-ext'))">
       <ItemGroup>
         <ProjectReference Include="..\..\santedb-model\SanteDB.Core.Model\SanteDB.Core.Model.csproj">
-          <Project>{F1A82A4F-4A57-47D7-AE76-444C8A4FF54A}</Project>
-          <Name>SanteDB.Core.Model</Name>
         </ProjectReference>
         <ProjectReference Include="..\..\santedb-api\SanteDB.Core.Api\SanteDB.Core.Api.csproj">
-          <Project>{3A45F695-47A2-464C-ACE6-BDABBFA39FBC}</Project>
-          <Name>SanteDB.Core.Api</Name>
         </ProjectReference>
         <ProjectReference Include="..\..\santedb-applets\SanteDB.Core.Applets\SanteDB.Core.Applets.csproj">
-          <Project>{39E61451-F4FE-493D-B754-5F06EB284AAC}</Project>
-          <Name>SanteDB.Core.Applets</Name>
         </ProjectReference>
       </ItemGroup>
     </When>
@@ -42,8 +36,7 @@
   </Choose>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NUnit">
-      <Version>3.13.3</Version>
+    <PackageReference Include="NUnit" Version="3.13.3">
     </PackageReference>
     <PackageReference Include="SharpCompress" Version="0.33.0" />
     <Reference Include="System" />
@@ -54,8 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SanteDB.BusinessRules.JavaScript\SanteDB.BusinessRules.JavaScript.csproj">
-      <Project>{3bfd6ee6-0267-4d82-be7d-9b48b2f6f3d4}</Project>
-      <Name>SanteDB.BusinessRules.JavaScript</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
