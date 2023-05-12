@@ -24,7 +24,9 @@ using SanteDB.Core.Diagnostics;
 using SanteDB.Core.i18n;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Acts;
+using SanteDB.Core.Model.Constants;
 using SanteDB.Core.Model.Entities;
+using SanteDB.Core.Model.Interfaces;
 using SanteDB.Core.Model.Query;
 using SanteDB.Core.Services;
 using System;
@@ -83,13 +85,9 @@ namespace SanteDB.BusinessRules.JavaScript
             {
                 // TODO: Refactor this to the DetectedIssue extension
                 this.m_tracer.TraceWarning("Error running {0} on {1} - The business rule has been ignored - {2}", triggerName, data, e);
-                if (data is Entity entity)
+                if (data is ITaggable taggable)
                 {
-                    entity.AddTag("$bre.error", e.Message);
-                }
-                else if (data is Act act)
-                {
-                    act.AddTag("$bre.error", e.Message);
+                    taggable.AddTag(SystemTagNames.BreErrorTag, e.Message);
                 }
                 throw new JsBusinessRuleException(String.Format(ErrorMessages.JS_BUSINESS_RULE_ERROR, triggerName), e);
             }
