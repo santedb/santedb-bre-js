@@ -64,7 +64,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
             this.m_adhocCache = ApplicationServiceContext.Current.GetService<IAdhocCacheService>();
         }
 
-        
+
         /// <summary>
         /// Add a business rule for the specified object
         /// </summary>
