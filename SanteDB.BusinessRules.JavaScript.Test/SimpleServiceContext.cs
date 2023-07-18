@@ -146,7 +146,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         {
         }
 
-        public void NotifyStartupProgress(String taskIdentifier, float startupProgress, string startupChangeText)
+        public void NotifyStartupProgress(string taskIdentifier, float startupProgress, string startupChangeText)
         {
             throw new NotImplementedException();
         }
