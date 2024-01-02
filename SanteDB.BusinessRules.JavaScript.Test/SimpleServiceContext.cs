@@ -116,6 +116,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         {
             return AppDomain.CurrentDomain.GetAllTypes();
         }
+        public IEnumerable<Type> GetAllTypes<TImplements>() => AppDomain.CurrentDomain.GetAllTypes().Where(t => typeof(TImplements).IsAssignableFrom(t));
 
         /// <summary>
         /// Service type
