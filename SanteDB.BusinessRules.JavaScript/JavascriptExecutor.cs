@@ -450,6 +450,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         {
                             try
                             {
+                                this.m_tracer.TraceVerbose("{0} - {1} on {2}", triggerName, c.Id, data);
                                 // There is a guard so let's execute it
                                 if (c.Guard == null || QueryExpressionParser.BuildLinqExpression<TBinding>(c.Guard).Compile()(data))
                                 {
