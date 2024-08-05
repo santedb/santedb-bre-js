@@ -23,6 +23,7 @@ using NUnit.Framework;
 using SanteDB.Core;
 using SanteDB.Core.Model.Acts;
 using SanteDB.Core.Model.Constants;
+using SanteDB.Core.Model.DataTypes.CheckDigitAlgorithms;
 using SanteDB.Core.Model.Entities;
 using SanteDB.Core.Model.Roles;
 using SanteDB.Core.Services;
@@ -127,6 +128,20 @@ namespace SanteDB.BusinessRules.JavaScript.Test
             var issues = breService.Validate(new Patient() { GenderConceptKey = Guid.NewGuid() });
             Assert.AreEqual(0, issues.Count);
             Assert.IsFalse(issues.Exists(o => o.Text == "NoGender"));
+        }
+
+        [Test]
+        public void TestShouldAppendGeneratedId()
+        {
+            var breService = ApplicationServiceContext.Current.GetService(typeof(IBusinessRulesService<Patient>)) as IBusinessRulesService<Patient>;
+            Assert.IsNotNull(breService);
+            var patient = new Patient()
+            {
+                TypeConceptKey = ActParticipationKeys.Baby
+            };
+            var afterInsert = breService.BeforeInsert(patient) as Patient;
+            Assert.AreEqual(1, afterInsert.Identifiers.Count(o => o.IdentityDomain.DomainName == "DL_MHMS_HIS_IIS_ID"));
+            Assert.IsTrue(new InlineIso7064Mod97Validator().IsValid(afterInsert.Identifiers.First()));
         }
 
 
