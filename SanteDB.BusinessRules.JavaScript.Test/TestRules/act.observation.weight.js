@@ -16,8 +16,6 @@
  * License for the specific language governing permissions and limitations under 
  * the License.
  * 
- * User: fyfej
- * Date: 2023-6-21
  */
 
 /// <reference path="~/.ref/js/openiz-model.js"/>
