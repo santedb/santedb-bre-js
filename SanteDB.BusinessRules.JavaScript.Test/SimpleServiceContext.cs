@@ -53,7 +53,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         public OperatingSystemID OperatingSystem => OperatingSystemID.Win32;
 
-        public SanteDBHostType HostType => SanteDBHostType.Server;
+        public SanteDBHostType HostType => SanteDBHostType.Test;
 
         /// <summary>
         /// Gets the start time
