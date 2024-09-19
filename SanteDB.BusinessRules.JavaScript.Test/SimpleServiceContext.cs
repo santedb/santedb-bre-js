@@ -15,8 +15,6 @@
  * License for the specific language governing permissions and limitations under 
  * the License.
  * 
- * User: fyfej
- * Date: 2023-6-21
  */
 using SanteDB.Core;
 using SanteDB.Core.Services;
@@ -55,7 +53,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         public OperatingSystemID OperatingSystem => OperatingSystemID.Win32;
 
-        public SanteDBHostType HostType => SanteDBHostType.Server;
+        public SanteDBHostType HostType => SanteDBHostType.Test;
 
         /// <summary>
         /// Gets the start time

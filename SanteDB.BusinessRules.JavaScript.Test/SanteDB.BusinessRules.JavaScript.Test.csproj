@@ -8,6 +8,9 @@
 	<PropertyGroup Condition="'$(VersionNumber)' == ''">
     <VersionNumber>3.0-debug</VersionNumber>
   </PropertyGroup>
+	<ItemGroup>
+	  <None Remove="TestRules\idgen.js" />
+	</ItemGroup>
 
   <ItemGroup>
     <Reference Include="System" />
@@ -43,6 +46,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <EmbeddedResource Include="TestRules\idgen.js" />
     <EmbeddedResource Include="TestRules\SimplePatientRule.js" />
   </ItemGroup>
   <ItemGroup>
