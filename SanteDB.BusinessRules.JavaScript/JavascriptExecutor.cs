@@ -458,13 +458,13 @@ namespace SanteDB.BusinessRules.JavaScript
                             catch (JavaScriptException e)
                             {
                                 this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
-                                    triggerName, data, e.Location.Source, e.Location.Start.Line, e.JavaScriptStackTrace, e);
+                                    triggerName, data, e.Location.SourceFile, e.Location.Start.Line, e.JavaScriptStackTrace, e);
                                 throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", e);
                             }
                             catch (TargetInvocationException e) when (e.InnerException is JavaScriptException je)
                             {
                                 this.m_tracer.TraceError("JS ERROR: Error running {0} for {1} @ {2}:{3} \r\n Javascript Stack: {4} \r\n C# Stack: {5}",
-                                    triggerName, data, je.Location.Source, je.Location.Start.Line, je.JavaScriptStackTrace, e);
+                                    triggerName, data, je.Location.SourceFile, je.Location.Start.Line, je.JavaScriptStackTrace, e);
                                 throw new JsBusinessRuleException($"Error running business rule {c.Id} - {triggerName} for {data}", je);
                             }
                             catch (Exception e)
@@ -546,7 +546,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public void Dispose()
         {
-            this.m_engine.DebugHandler.BreakPoints.Clear();
+            this.m_engine.Debugger.BreakPoints.Clear();
             this.m_registeredCallback.Clear();
             this.m_registeredCallback = null;
             this.m_engine = null;
