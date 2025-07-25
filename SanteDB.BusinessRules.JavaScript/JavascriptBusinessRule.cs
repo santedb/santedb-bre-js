@@ -43,7 +43,7 @@ namespace SanteDB.BusinessRules.JavaScript
     /// interface is called from applet initialization, a new instance of this class is chained into the execution pipeline. From there, the events raised
     /// for before/after insert/update/obsolete/query are translated to JavaScript and the provided callback is executed.</para>
     /// </remarks>
-    internal class JavascriptBusinessRule<TBinding> : IBusinessRulesService<TBinding> where TBinding : IdentifiedData
+    internal class JavascriptBusinessRule<TBinding> : IJavascriptBusinessRule, IBusinessRulesService<TBinding> where TBinding : IdentifiedData
     {
         // Tracer
         private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRule<TBinding>));
@@ -66,6 +66,9 @@ namespace SanteDB.BusinessRules.JavaScript
             get;
             set;
         }
+
+        /// <inheritdoc/>
+        public object InvokeTrigger(String triggerName, object data) => this.InvokeTrigger(triggerName, (TBinding)data);
 
         /// <summary>
         /// Invokes the specified trigger if one is registered

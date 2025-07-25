@@ -20,8 +20,10 @@
  */
 using SanteDB.BusinessRules.JavaScript.JNI;
 using SanteDB.Core;
+using SanteDB.Core.Model;
 using SanteDB.Core.Model.Collection;
 using SanteDB.Core.Services;
+using System.Data;
 using System.Linq;
 
 namespace SanteDB.BusinessRules.JavaScript.Rules
@@ -48,28 +50,19 @@ namespace SanteDB.BusinessRules.JavaScript.Rules
         /// </summary>
         protected override Bundle InvokeTrigger(string triggerName, Bundle data)
         {
-            if (data.Item.Select(i => i.GetType()).Distinct().Any(t =>
-               {
-                   var jreType = typeof(JavascriptBusinessRule<>).MakeGenericType(t);
-                   var bres = ApplicationServiceContext.Current.GetBusinessRuleService(t);
-                   while (bres != null)
-                   {
-                       if (jreType.IsAssignableFrom(bres.GetType()))
-                       {
-                           return true;
-                       }
-
-                       bres = bres.Next;
-                   }
-                   return false;
-               }))
+            for(var i = 0; i < data.Item.Count; i++)
             {
-                return base.InvokeTrigger(triggerName, data);
+                var bres = ApplicationServiceContext.Current.GetBusinessRuleService(data.Item[i].GetType());
+                while (bres != null)
+                {
+                    if(bres is IJavascriptBusinessRule jrb)
+                    {
+                        data.Item[i] = (IdentifiedData)jrb.InvokeTrigger(triggerName, data.Item[i]);
+                    }
+                    bres = bres.Next;
+                }
             }
-            else
-            {
-                return data;
-            }
+            return data;
         }
     }
 }
