@@ -279,15 +279,7 @@ namespace SanteDB.BusinessRules.JavaScript.JNI
         /// <summary>
         /// Get data asset
         /// </summary>
-        public String GetDataAsset(String dataId)
-        {
-            using (Stream ins = (ApplicationServiceContext.Current.GetService(typeof(IDataReferenceResolver)) as IDataReferenceResolver).Resolve(dataId))
-            using (MemoryStream ms = new MemoryStream())
-            {
-                ins.CopyTo(ms);
-                return Encoding.UTF8.GetString(ms.ToArray(), 0, ms.ToArray().Length);
-            }
-        }
+        public String GetDataAsset(String dataId) => ApplicationServiceContext.Current.GetService<IReferenceResolver>().ResolveAsString(dataId);
 
         /// <summary>
         /// Gets the specified data from the underlying data-store

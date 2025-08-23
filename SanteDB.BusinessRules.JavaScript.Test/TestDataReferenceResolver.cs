@@ -18,6 +18,7 @@
  * User: fyfej
  * Date: 2023-6-21
  */
+using SanteDB.Core.Services;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
@@ -27,7 +28,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
     /// Represents a data resolver
     /// </summary>
     [ExcludeFromCodeCoverage]
-    internal class TestDataReferenceResolver : IDataReferenceResolver
+    internal class TestDataReferenceResolver : IReferenceResolver
     {
         /// <summary>
         /// Resolve reference
@@ -35,6 +36,18 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         public Stream Resolve(string reference)
         {
             return typeof(TestDataReferenceResolver).Assembly.GetManifestResourceStream("SanteDB.BusinessRules.JavaScript.Test.RefData." + reference);
+        }
+
+        /// <inheritdoc/>
+        public Stream ResolveAsStream(string reference) => this.Resolve(reference);
+
+        /// <inheritdoc/>
+        public string ResolveAsString(string reference)
+        {
+            using (var sr = new StreamReader(this.Resolve(reference)))
+            {
+                return sr.ReadToEnd();
+            }
         }
     }
 }

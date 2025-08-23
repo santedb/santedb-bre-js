@@ -20,7 +20,7 @@
  */
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SanteDB.Core.Applets.ViewModel.Json;
+using SanteDB.Core.ViewModel.Json;
 using SanteDB.Core.Model;
 using SanteDB.Core.Model.Json.Formatter;
 using System;
