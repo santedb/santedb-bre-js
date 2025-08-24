@@ -204,7 +204,7 @@ namespace SanteDB.BusinessRules.JavaScript
                     foreach (Match match in incMatches)
                     {
                         var include = match.Groups[1].Value;
-                        var incStream = (ApplicationServiceContext.Current.GetService(typeof(IDataReferenceResolver)) as IDataReferenceResolver)?.Resolve(include);
+                        var incStream = ApplicationServiceContext.Current.GetService<IReferenceResolver>()?.ResolveAsStream(include);
                         if (incStream == null)
                         {
                             this.m_tracer.TraceWarning("Include {0} not found", include);

@@ -37,7 +37,6 @@ namespace SanteDB.BusinessRules.JavaScript
     [ServiceProvider("Applet JavaScript BRE", Dependencies = new Type[] { typeof(IAppletManagerService) })]
     public class AppletBusinessRulesDaemon : IDaemonService
     {
-        private IDataReferenceResolver m_dataResolver;
         private IServiceManager m_serviceManager;
         private readonly IAppletManagerService m_appletManager;
         private readonly IAppletSolutionManagerService m_solutionManager;
@@ -51,9 +50,8 @@ namespace SanteDB.BusinessRules.JavaScript
         /// <summary>
         /// Applet business rules daemon
         /// </summary>
-        public AppletBusinessRulesDaemon(IServiceManager serviceManager, IAppletManagerService appletManager, IDataReferenceResolver dataResolver = null, IAppletSolutionManagerService solutionManagerService = null)
+        public AppletBusinessRulesDaemon(IServiceManager serviceManager, IAppletManagerService appletManager, IAppletSolutionManagerService solutionManagerService = null)
         {
-            this.m_dataResolver = dataResolver;
             this.m_serviceManager = serviceManager;
             this.m_appletManager = appletManager;
             this.m_solutionManager = solutionManagerService;
@@ -93,12 +91,6 @@ namespace SanteDB.BusinessRules.JavaScript
         public bool Start()
         {
             this.Starting?.Invoke(this, EventArgs.Empty);
-
-            if (this.m_dataResolver == null)
-            {
-                this.m_serviceManager.AddServiceProvider(typeof(AppletDataReferenceResolver));
-            }
-
 
             try
             {
