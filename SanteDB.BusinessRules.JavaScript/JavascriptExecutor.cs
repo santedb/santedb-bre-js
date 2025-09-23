@@ -284,6 +284,7 @@ namespace SanteDB.BusinessRules.JavaScript
                         ApplicationServiceContext.Current.AddBusinessRule(typeof(JavascriptBusinessRule<>).MakeGenericType(targetType));
                     }
 
+                    this.m_tracer.TraceInfo("Added rule {0} to business rules engine", id);
                     callbacks.Add(new JavascriptCallbackInfo(id, trigger, guard, _delegate));
                 }
             }
@@ -386,6 +387,8 @@ namespace SanteDB.BusinessRules.JavaScript
                 {
                     return data;
                 }
+
+                this.m_tracer.TraceVerbose("JavaScript Invoke Trigger {0} on {1}", triggerName, sdata["$type"]);
 
                 var callList = this.GetCallList(this.m_binder.BindToType("SanteDB.Core.Model, Version=1.1.0.0", sdata["$type"].ToString()), triggerName);
                 var retVal = data;
