@@ -59,7 +59,7 @@
 	</Choose>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="[13.0.4,13.1)" />
-		<PackageReference Include="SharpCompress" Version="0.40.0" />
+		<PackageReference Include="SharpCompress" Version="[0.50.0,0.51)" />
 		<PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
 	</ItemGroup>
 	<ItemGroup>
