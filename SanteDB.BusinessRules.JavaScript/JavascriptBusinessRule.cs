@@ -80,6 +80,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             try
             {
+                this.m_tracer.TraceInfo("Applying Javascript-based business rule triggers");
                 return (TBinding)JavascriptExecutorPool.Current.Execute((e, d) => e.Invoke(triggerName, d), data);
             }
             catch (Exception e)
