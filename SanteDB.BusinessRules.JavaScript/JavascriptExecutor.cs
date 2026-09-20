@@ -457,7 +457,12 @@ namespace SanteDB.BusinessRules.JavaScript
                                 // There is a guard so let's execute it
                                 if (c.Guard == null || QueryExpressionParser.BuildLinqExpression<TBinding>(c.Guard).Compile()(data))
                                 {
+                                    this.m_tracer.TraceInfo("{0} - {1} is executing on {2}", triggerName, c.Id, data);
                                     viewModel = c.Callback.DynamicInvoke(viewModel);
+                                }
+                                else
+                                {
+                                    this.m_tracer.TraceInfo("{0} - {1} on {2} does not meet execution criteria", triggerName, c.Id, data);
                                 }
                             }
                             catch (JavaScriptException e)
@@ -481,8 +486,12 @@ namespace SanteDB.BusinessRules.JavaScript
 
                         retVal = (TBinding)JavascriptUtils.ToModel(viewModel).CopyAnnotations(retVal);
                     }
+                    else
+                    {
+                        this.m_tracer.TraceInfo("{0} - No matching triggers for {1}", triggerName, data.Type);
+                    }
 
-                    return retVal;
+                        return retVal;
                 }
             }
         }
