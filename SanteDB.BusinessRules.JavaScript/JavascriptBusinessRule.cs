@@ -18,6 +18,7 @@
  * User: fyfej
  * Date: 2023-6-21
  */
+using Acornima.Ast;
 using SanteDB.BusinessRules.JavaScript.Exceptions;
 using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Diagnostics;
@@ -45,6 +46,20 @@ namespace SanteDB.BusinessRules.JavaScript
     /// </remarks>
     internal class JavascriptBusinessRule<TBinding> : IJavascriptBusinessRule, IBusinessRulesService<TBinding> where TBinding : IdentifiedData
     {
+
+        /// <summary>
+        /// Execute once protection
+        /// </summary>
+        private struct AlreadyRunRule
+        {
+            public AlreadyRunRule(string triggerName)
+            {
+                this.TriggerName = triggerName;
+            }
+
+            public string TriggerName { get; }
+        }
+
         // Tracer
         private readonly Tracer m_tracer = Tracer.GetTracer(typeof(JavascriptBusinessRule<TBinding>));
 
@@ -80,8 +95,16 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             try
             {
-                this.m_tracer.TraceInfo("Applying Javascript-based business rule triggers");
-                return (TBinding)JavascriptExecutorPool.Current.Execute((e, d) => e.Invoke(triggerName, d), data);
+                if (!data.GetAnnotations<AlreadyRunRule>().Any(r => r.TriggerName == triggerName))
+                {
+                    data.AddAnnotation(new AlreadyRunRule(triggerName));
+                    this.m_tracer.TraceInfo("Applying Javascript-based business rule triggers");
+                    return (TBinding)JavascriptExecutorPool.Current.Execute((e, d) => e.Invoke(triggerName, d), data);
+                }
+                else
+                {
+                    return data;
+                }
             }
             catch (Exception e)
             {
@@ -100,7 +123,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterInsert(TBinding data)
         {
-            var retVal = this.InvokeTrigger("AfterInsert", data);
+            var retVal = this.InvokeTrigger(nameof(AfterInsert), data);
             return this.Next?.AfterInsert(retVal) ?? retVal;
         }
 
@@ -109,7 +132,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterDelete(TBinding data)
         {
-            var retVal = this.InvokeTrigger("AfterObsolete", data);
+            var retVal = this.InvokeTrigger(nameof(AfterDelete), data);
             return this.Next?.AfterDelete(retVal) ?? retVal;
         }
 
@@ -118,7 +141,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public IQueryResultSet<TBinding> AfterQuery(IQueryResultSet<TBinding> results)
         {
-            IQueryResultSet<TBinding> resultSet = new NestedQueryResultSet<TBinding>(results, (o) => (TBinding)JavascriptExecutorPool.Current.Execute((e, i) => e.Invoke("AfterQuery", i), o));
+            IQueryResultSet<TBinding> resultSet = new NestedQueryResultSet<TBinding>(results, (o) => (TBinding)JavascriptExecutorPool.Current.Execute((e, i) => e.Invoke(nameof(AfterQuery), i), o));
             if (this.Next != null)
             {
                 resultSet = resultSet.Union(this.Next.AfterQuery(results));
@@ -131,7 +154,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterRetrieve(TBinding result)
         {
-            var retVal = this.InvokeTrigger("AfterRetrieve", result);
+            var retVal = this.InvokeTrigger(nameof(AfterRetrieve), result);
             return this.Next?.AfterRetrieve(retVal) ?? retVal;
         }
 
@@ -140,7 +163,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding AfterUpdate(TBinding data)
         {
-            var retVal = this.InvokeTrigger("AfterUpdate", data);
+            var retVal = this.InvokeTrigger(nameof(AfterUpdate), data);
             return this.Next?.AfterUpdate(retVal) ?? retVal;
         }
 
@@ -149,7 +172,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding BeforeInsert(TBinding data)
         {
-            var retVal = this.InvokeTrigger("BeforeInsert", data);
+            var retVal = this.InvokeTrigger(nameof(BeforeInsert), data);
             return this.Next?.BeforeInsert(retVal) ?? retVal;
         }
 
@@ -158,7 +181,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding BeforeDelete(TBinding data)
         {
-            var retVal = this.InvokeTrigger("BeforeObsolete", data);
+            var retVal = this.InvokeTrigger(nameof(BeforeObsolete), data);
             return this.Next?.BeforeDelete(retVal) ?? retVal;
         }
 
@@ -167,7 +190,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public TBinding BeforeUpdate(TBinding data)
         {
-            var retVal = this.InvokeTrigger("BeforeUpdate", data);
+            var retVal = this.InvokeTrigger(nameof(BeforeUpdate), data);
             return this.Next?.BeforeUpdate(retVal) ?? retVal;
         }
 
@@ -201,7 +224,7 @@ namespace SanteDB.BusinessRules.JavaScript
         /// </summary>
         public IQueryResultSet AfterQuery(IQueryResultSet results)
         {
-            IQueryResultSet resultSet = new NestedQueryResultSet(results, (o) => JavascriptExecutorPool.Current.Execute<TBinding>((e, i) => e.Invoke("AfterQuery", (TBinding)i), (TBinding)o));
+            IQueryResultSet resultSet = new NestedQueryResultSet(results, (o) => JavascriptExecutorPool.Current.Execute<TBinding>((e, i) => e.Invoke(nameof(AfterQuery), (TBinding)i), (TBinding)o));
             if (this.Next != null)
             {
                 resultSet = resultSet.Union(this.Next.AfterQuery(results));

@@ -81,7 +81,7 @@ namespace SanteDB.BusinessRules.JavaScript.Test
         /// </summary>
         public void AddServiceProvider(Type serviceType)
         {
-            this.m_services.Add(Activator.CreateInstance(serviceType));
+            this.m_services.Add(serviceType.CreateInjected());
         }
 
         public void AddServiceProvider(object serviceInstance)
@@ -96,7 +96,19 @@ namespace SanteDB.BusinessRules.JavaScript.Test
 
         public object CreateInjected(Type type)
         {
-            throw new NotImplementedException();
+            var ci = type.GetConstructor(Type.EmptyTypes);
+            if(ci != null)
+            {
+                return ci.Invoke(new object[0]);
+            }
+
+            // HACK: Some BRE needs a ref to IServiceProvider
+            ci = type.GetConstructor(new Type[] { typeof(IServiceProvider) }); 
+            if(ci != null)
+            {
+                return ci.Invoke(new object[] { this });
+            }
+            throw new NotSupportedException();
         }
 
         public TObject CreateInjected<TObject>()
