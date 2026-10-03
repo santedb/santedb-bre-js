@@ -95,7 +95,7 @@ namespace SanteDB.BusinessRules.JavaScript
         {
             try
             {
-                if (!data.GetAnnotations<AlreadyRunRule>().Any(r => r.TriggerName == triggerName))
+                if (data != null && !data.GetAnnotations<AlreadyRunRule>().Any(r => r.TriggerName == triggerName))
                 {
                     data.AddAnnotation(new AlreadyRunRule(triggerName));
                     this.m_tracer.TraceInfo("Applying Javascript-based business rule triggers");
