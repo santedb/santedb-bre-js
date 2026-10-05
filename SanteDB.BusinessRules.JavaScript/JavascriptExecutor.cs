@@ -28,11 +28,13 @@ using SanteDB.Core.BusinessRules;
 using SanteDB.Core.Diagnostics;
 using SanteDB.Core.Exceptions;
 using SanteDB.Core.Model;
+using SanteDB.Core.Model.Interfaces;
 using SanteDB.Core.Model.Query;
 using SanteDB.Core.Model.Serialization;
 using SanteDB.Core.Security;
 using SanteDB.Core.Services;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -442,6 +444,12 @@ namespace SanteDB.BusinessRules.JavaScript
                         return data;
                     }
 
+                    IList<IExternalIdentifier> previousIdentifiers = null;
+                    if(data is IHasIdentifiers ihd)
+                    {
+                        previousIdentifiers = ihd.Identifiers.ToList();
+                    }
+
                     var callList = this.GetCallList(data.GetType(), triggerName);
                     callList = callList.Union(this.GetCallList<TBinding>(triggerName), this.m_javascriptComparer).ToList();
                     var retVal = data;
@@ -485,13 +493,20 @@ namespace SanteDB.BusinessRules.JavaScript
                         }
 
                         retVal = (TBinding)JavascriptUtils.ToModel(viewModel).CopyAnnotations(retVal);
+
+                        // Tag any new identifiers as SYSTEM since the view model serialization will not prevent this 
+
                     }
                     else
                     {
                         this.m_tracer.TraceInfo("{0} - No matching triggers for {1}", triggerName, data.Type);
                     }
 
-                        return retVal;
+                    if(previousIdentifiers != null && retVal is IHasIdentifiers ihd2)
+                    {
+                        ihd2.Identifiers.Where(o => previousIdentifiers.Any(p => o.Value == p.Value && (o.IdentityDomainKey == p.IdentityDomainKey || o.IdentityDomain?.DomainName == p.IdentityDomain?.DomainName))).ForEach(id => id.AssertSystemProvenance());
+                    } 
+                    return retVal;
                 }
             }
         }
